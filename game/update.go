@@ -7,21 +7,20 @@ import (
 	"math"
 	"math/rand/v2"
 	"os"
+	"slices"
 	. "snakehem/apple"
+	"snakehem/controller"
+	"snakehem/controller/gamepad"
+	"snakehem/controller/keyboard"
 	. "snakehem/direction"
 	. "snakehem/snake"
 	. "snakehem/state"
-	"slices"
 	"time"
 )
 
 func (g *Game) Update() error {
-	keys := inpututil.AppendPressedKeys(nil)
-	if len(keys) > 0 {
-		key := keys[0]
-		if key.String() == "Escape" {
-			os.Exit(0)
-		}
+	if keyboard.Instance.IsExitJustPressed() {
+		os.Exit(0)
 	}
 	switch g.state {
 	case Lobby:
@@ -44,7 +43,7 @@ func (g *Game) Update() error {
 				if head.Redness >= 1 || head.Redness <= 0 {
 					snake.HeadRednessGrowth = -snake.HeadRednessGrowth
 				}
-			} else if g.isAnyButtonPressed(snake.Id) && g.fadeCountdown == 0 {
+			} else if snake.Controller.IsAnyJustPressed() && g.fadeCountdown == 0 {
 				head.Redness = 1
 			} else {
 				head.ChangeRedness(-0.1)
@@ -66,22 +65,18 @@ func (g *Game) Update() error {
 		for _, snake := range g.snakes {
 			direction := snake.Direction
 			if g.fadeCountdown == 0 {
-				if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonRightTop) ||
-					inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonLeftTop) {
+				if snake.Controller.IsUpJustPressed() {
 					direction = Up
-					log.Info().Int("snakeId", int(snake.Id)).Str("direction", "Up").Msg("New direction")
-				} else if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonRightBottom) ||
-					inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonLeftBottom) {
+					log.Info().Any("snakeId", snake.Controller).Str("direction", "Up").Msg("New direction")
+				} else if snake.Controller.IsDownJustPressed() {
 					direction = Down
-					log.Info().Int("snakeId", int(snake.Id)).Str("direction", "Down").Msg("New direction")
-				} else if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonRightLeft) ||
-					inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonLeftLeft) {
+					log.Info().Any("snakeId", snake.Controller).Str("direction", "Down").Msg("New direction")
+				} else if snake.Controller.IsLeftJustPressed() {
 					direction = Left
-					log.Info().Int("snakeId", int(snake.Id)).Str("direction", "Left").Msg("New direction")
-				} else if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonRightRight) ||
-					inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonLeftRight) {
+					log.Info().Any("snakeId", snake.Controller).Str("direction", "Left").Msg("New direction")
+				} else if snake.Controller.IsRightJustPressed() {
 					direction = Right
-					log.Info().Int("snakeId", int(snake.Id)).Str("direction", "Right").Msg("New direction")
+					log.Info().Any("snakeId", snake.Controller).Str("direction", "Right").Msg("New direction")
 				}
 			}
 			nX, nY := newHeadCoords(snake, direction)
@@ -145,11 +140,7 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 	targetSnake := bittenLink.Snake
 	bittenLink.HealthPercent -= healthReductionPerBite
 	bittenLink.Redness = 1
-	ebiten.VibrateGamepad(targetSnake.Id, &ebiten.VibrateGamepadOptions{
-		Duration:        200 * time.Millisecond,
-		StrongMagnitude: 1,
-		WeakMagnitude:   1,
-	})
+	targetSnake.Controller.Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
 		g.incScore(bitingSnake, bitLinkScore)
 	}
@@ -175,30 +166,48 @@ func (g *Game) incScore(snake *Snake, delta int) {
 	}
 }
 
+func appendControllers(controllers []controller.Controller) []controller.Controller {
+	var result []controller.Controller = nil
+	if !slices.Contains(controllers, keyboard.Instance) {
+		result = append(result, keyboard.Instance)
+	}
+	for _, g := range ebiten.AppendGamepadIDs(nil) {
+		contains := false
+		var gamepadAsController controller.Controller = gamepad.NewGamepad(g)
+		for _, c := range controllers {
+			if c.Equals(gamepadAsController) {
+				contains = true
+				break
+			}
+		}
+		if !contains && ebiten.IsStandardGamepadLayoutAvailable(g) {
+			result = append(result, gamepadAsController)
+		}
+	}
+	return result
+}
+
 func (g *Game) updateHeadCount() {
 	for _, snake := range g.snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
-	g.gamepadIDsBuf = inpututil.AppendJustConnectedGamepadIDs(g.gamepadIDsBuf)
-	for _, id := range g.gamepadIDsBuf {
-		if ebiten.IsStandardGamepadLayoutAvailable(id) {
-			if g.isAnyButtonPressed(id) {
-				snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Id == id })
-				if snakeIdx == -1 {
-					if len(g.snakes) < maxSnakes {
-						for _, snake := range g.snakes {
-							head := snake.Links[0]
-							g.grid[head.Y][head.X] = nil
-						}
-						g.snakes = append(g.snakes, NewSnake(id, snakeColours[len(g.snakes)]))
-						g.layoutSnakes()
+	g.controllers = appendControllers(g.controllers)
+	for _, c := range g.controllers {
+		if c.IsAnyJustPressed() {
+			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })
+			if snakeIdx == -1 {
+				if len(g.snakes) < maxSnakes {
+					for _, snake := range g.snakes {
+						head := snake.Links[0]
+						g.grid[head.Y][head.X] = nil
 					}
-				} else {
-					g.snakes[snakeIdx].Links[0].Redness = 1
-					if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonCenterRight) &&
-						len(g.snakes) > 1 {
-						g.state = Action
-					}
+					g.snakes = append(g.snakes, NewSnake(c, snakeColours[len(g.snakes)]))
+					g.layoutSnakes()
+				}
+			} else {
+				g.snakes[snakeIdx].Links[0].Redness = 1
+				if c.IsStartJustPressed() && len(g.snakes) > 1 {
+					g.state = Action
 				}
 			}
 		}
@@ -207,15 +216,15 @@ func (g *Game) updateHeadCount() {
 
 func (g *Game) updateScoreboard() {
 	for _, snake := range g.snakes {
-		if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonCenterRight) {
+		if snake.Controller.IsStartJustPressed() {
 			g.restartPreservingSnakes()
-		} else if inpututil.IsStandardGamepadButtonJustPressed(snake.Id, ebiten.StandardGamepadButtonCenterLeft) {
+		} else if snake.Controller.IsExitJustPressed() {
 			os.Exit(0)
 		}
 		for _, link := range snake.Links {
 			link.ChangeRedness(-0.1)
 		}
-		if len(inpututil.AppendJustPressedStandardGamepadButtons(snake.Id, nil)) > 0 {
+		if snake.Controller.IsAnyJustPressed() {
 			snake.Links[0].Redness = 1
 		}
 	}

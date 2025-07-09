@@ -1,8 +1,8 @@
 package snake
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"image/color"
+	"snakehem/controller"
 	. "snakehem/direction"
 )
 
@@ -11,7 +11,7 @@ type Snake struct {
 	Colour            color.Color
 	Direction         Direction
 	Score             int
-	Id                ebiten.GamepadID
+	Controller        controller.Controller
 	HeadRednessGrowth float32
 }
 
@@ -23,13 +23,13 @@ type Link struct {
 	Redness       float32
 }
 
-func NewSnake(id ebiten.GamepadID, colour color.Color) *Snake {
+func NewSnake(controller controller.Controller, colour color.Color) *Snake {
 	snake := &Snake{
 		Links:             make([]*Link, 1),
 		Colour:            colour,
 		Direction:         None,
 		Score:             0,
-		Id:                id,
+		Controller:        controller,
 		HeadRednessGrowth: -1,
 	}
 	snake.Links[0] = &Link{

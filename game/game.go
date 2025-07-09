@@ -9,6 +9,7 @@ import (
 	"golang.org/x/image/colornames"
 	"image/color"
 	"math"
+	. "snakehem/controller"
 	"snakehem/pxterm24"
 	. "snakehem/snake"
 	. "snakehem/state"
@@ -74,7 +75,7 @@ var snakeColours = [...]color.Color{
 type Game struct {
 	grid          [gridSize][gridSize]any
 	snakes        []*Snake
-	gamepadIDsBuf []ebiten.GamepadID
+	controllers   []Controller
 	state         State
 	countdown     int
 	elapsedFrames uint64
@@ -85,15 +86,15 @@ type Game struct {
 func Run() {
 	pixfont.Spacing = 0
 	// debug doesn't work well in fullscreen mode
-	//ebiten.SetWindowSize(960, 960)
-	ebiten.SetFullscreen(true)
+	ebiten.SetWindowSize(960, 960)
+	//ebiten.SetFullscreen(true)
 	ebiten.SetTPS(tps)
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
 		grid:          [gridSize][gridSize]any{},
 		snakes:        nil,
-		gamepadIDsBuf: nil,
+		controllers:   nil,
 		state:         Lobby,
 		countdown:     tps * countdownSeconds,
 		elapsedFrames: 0,

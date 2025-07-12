@@ -32,6 +32,8 @@ const (
 	approachingTargetScoreGap     = snakeTargetLength * nippedTailLinkBonusMultiplier * 1.2
 	gridFadeCountdown             = 15
 	newAppleProbabilityParam      = tps * 3
+	eyeRadiusPx                   = 2
+	eyeGapPx                      = 3
 )
 
 //go:embed crt_shader.kage

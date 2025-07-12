@@ -8,12 +8,13 @@ import (
 	"golang.org/x/image/colornames"
 	"image/color"
 	"math"
+	"slices"
 	. "snakehem/apple"
+	"snakehem/direction"
 	"snakehem/pxterm16"
 	"snakehem/pxterm24"
 	. "snakehem/snake"
 	. "snakehem/state"
-	"slices"
 	"time"
 )
 
@@ -208,15 +209,70 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 				switch item := val.(type) {
 				case *Link:
 					shrink := (1 - float32(item.HealthPercent)/100) * cellDimPx * 0.5
-					vector.DrawFilledRect(
-						screen,
-						float32(item.X*cellDimPx)+shrink,
-						float32(item.Y*cellDimPx)+shrink,
-						cellDimPx-shrink*2,
-						cellDimPx-shrink*2,
-						withRedness(item.Snake.Colour, item.Redness),
-						false,
-					)
+					if item != item.Snake.Links[0] {
+						vector.DrawFilledRect(
+							screen,
+							float32(item.X*cellDimPx)+shrink,
+							float32(item.Y*cellDimPx)+shrink,
+							cellDimPx-shrink*2,
+							cellDimPx-shrink*2,
+							withRedness(item.Snake.Colour, item.Redness),
+							false,
+						)
+					} else {
+						var x1, y1, x2, y2 float32
+						switch item.Snake.Direction {
+						case direction.Up:
+							x1 = float32(item.X*cellDimPx) + eyeGapPx
+							y1 = float32(item.Y*cellDimPx) + eyeGapPx
+							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
+							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+						case direction.Down:
+							x1 = float32(item.X*cellDimPx) + eyeGapPx
+							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
+							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
+							y2 = float32((item.Y+1)*cellDimPx) - eyeGapPx
+						case direction.Left:
+							x1 = float32(item.X*cellDimPx) + eyeGapPx
+							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
+							x2 = float32(item.X*cellDimPx) + eyeGapPx
+							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+						case direction.Right:
+							x1 = float32((item.X+1)*cellDimPx) - eyeGapPx
+							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
+							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
+							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+						case direction.None:
+						}
+						if x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0 {
+							vector.DrawFilledCircle(
+								screen,
+								x1,
+								y1,
+								eyeRadiusPx,
+								withRedness(item.Snake.Colour, item.Redness),
+								false,
+							)
+							vector.DrawFilledCircle(
+								screen,
+								x2,
+								y2,
+								eyeRadiusPx,
+								withRedness(item.Snake.Colour, item.Redness),
+								false,
+							)
+						} else {
+							vector.DrawFilledRect(
+								screen,
+								float32(item.X*cellDimPx),
+								float32(item.Y*cellDimPx),
+								cellDimPx,
+								cellDimPx,
+								withRedness(item.Snake.Colour, item.Redness),
+								false,
+							)
+						}
+					}
 				case *Apple:
 					vector.DrawFilledRect(
 						screen,

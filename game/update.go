@@ -9,7 +9,7 @@ import (
 	"os"
 	"slices"
 	. "snakehem/apple"
-	"snakehem/controller"
+	"snakehem/controller/controllers"
 	"snakehem/controller/keyboard"
 	. "snakehem/direction"
 	. "snakehem/snake"
@@ -169,7 +169,7 @@ func (g *Game) updateHeadCount() {
 	for _, snake := range g.snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
-	g.controllers = controller.Controllers()
+	g.controllers = controllers.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
 			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })

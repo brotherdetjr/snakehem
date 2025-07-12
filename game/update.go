@@ -10,7 +10,6 @@ import (
 	"slices"
 	. "snakehem/apple"
 	"snakehem/controller"
-	"snakehem/controller/gamepad"
 	"snakehem/controller/keyboard"
 	. "snakehem/direction"
 	. "snakehem/snake"
@@ -166,32 +165,11 @@ func (g *Game) incScore(snake *Snake, delta int) {
 	}
 }
 
-func appendControllers(controllers []controller.Controller) []controller.Controller {
-	var result []controller.Controller = nil
-	if !slices.Contains(controllers, keyboard.Instance) {
-		result = append(result, keyboard.Instance)
-	}
-	for _, g := range ebiten.AppendGamepadIDs(nil) {
-		contains := false
-		var gamepadAsController controller.Controller = gamepad.NewGamepad(g)
-		for _, c := range controllers {
-			if c.Equals(gamepadAsController) {
-				contains = true
-				break
-			}
-		}
-		if !contains && ebiten.IsStandardGamepadLayoutAvailable(g) {
-			result = append(result, gamepadAsController)
-		}
-	}
-	return result
-}
-
 func (g *Game) updateHeadCount() {
 	for _, snake := range g.snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
-	g.controllers = appendControllers(g.controllers)
+	g.controllers = controller.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
 			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })

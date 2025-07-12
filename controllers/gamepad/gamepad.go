@@ -3,7 +3,7 @@ package gamepad
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"snakehem/controller"
+	"snakehem/controllers/controller"
 	"time"
 )
 

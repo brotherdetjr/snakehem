@@ -9,7 +9,7 @@ import (
 	"golang.org/x/image/colornames"
 	"image/color"
 	"math"
-	. "snakehem/controller"
+	"snakehem/controllers/controller"
 	"snakehem/pxterm24"
 	. "snakehem/snake"
 	. "snakehem/state"
@@ -75,7 +75,7 @@ var snakeColours = [...]color.Color{
 type Game struct {
 	grid          [gridSize][gridSize]any
 	snakes        []*Snake
-	controllers   []Controller
+	controllers   []controller.Controller
 	state         State
 	countdown     int
 	elapsedFrames uint64

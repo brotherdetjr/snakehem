@@ -2,7 +2,7 @@ package snake
 
 import (
 	"image/color"
-	"snakehem/controller"
+	"snakehem/controllers/controller"
 	. "snakehem/direction"
 )
 

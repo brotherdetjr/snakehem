@@ -2,6 +2,7 @@ package snake
 
 import (
 	"image/color"
+	"snakehem/consts"
 	"snakehem/controllers/controller"
 	. "snakehem/direction"
 )
@@ -41,7 +42,7 @@ func NewSnake(controller controller.Controller, colour color.Color) *Snake {
 }
 
 func (l *Link) ChangeRedness(delta float32) {
-	l.Redness += delta
+	l.Redness += delta / consts.TpsMultiplier
 	if l.Redness < 0 {
 		l.Redness = 0
 	} else if l.Redness > 1 {

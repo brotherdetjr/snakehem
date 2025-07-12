@@ -10,6 +10,7 @@ import (
 	"math"
 	"slices"
 	. "snakehem/apple"
+	consts "snakehem/consts"
 	"snakehem/direction"
 	"snakehem/pxterm16"
 	"snakehem/pxterm24"
@@ -30,7 +31,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				screen,
 				"PLAYERS PRESS ANY BUTTON TO JOIN",
 				colornames.Yellow,
-				gridDimPx/2.5,
+				consts.GridDimPx/2.5,
 				pxterm16.Font,
 			)
 		} else {
@@ -38,22 +39,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				screen,
 				"PLAYERS PRESS START BUTTON TO GO",
 				colornames.Yellow,
-				gridDimPx/2.5,
+				consts.GridDimPx/2.5,
 				pxterm16.Font,
 			)
 			drawTextCentered(
 				screen,
 				"              START             ",
 				color.White,
-				gridDimPx/2.5,
+				consts.GridDimPx/2.5,
 				pxterm16.Font,
 			)
-			if snakeCount < maxSnakes {
+			if snakeCount < consts.MaxSnakes {
 				drawTextCentered(
 					screen,
 					"OR ANY OTHER BUTTON TO JOIN",
 					colornames.Yellow,
-					gridDimPx/2.5+float64(pxterm16Height)*1.5,
+					consts.GridDimPx/2.5+float64(pxterm16Height)*1.5,
 					pxterm16.Font,
 				)
 			}
@@ -64,13 +65,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				screen,
 				0,
 				0,
-				gridDimPx,
-				gridDimPx,
+				consts.GridDimPx,
+				consts.GridDimPx,
 				color.NRGBA{
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((gridFadeCountdown - g.fadeCountdown) * 200 / gridFadeCountdown),
+					A: uint8((consts.GridFadeCountdown - g.fadeCountdown) * 200 / consts.GridFadeCountdown),
 				},
 				false,
 			)
@@ -90,8 +91,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 		screen,
 		0,
 		0,
-		gridDimPx,
-		gridDimPx,
+		consts.GridDimPx,
+		consts.GridDimPx,
 		color.NRGBA{
 			R: 85,
 			G: 107,
@@ -143,8 +144,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 	for i, snake := range snakes {
 		top := pxterm24Height * 2 * (i + 3)
 		score := snake.Score
-		if score > targetScore {
-			score = targetScore
+		if score > consts.TargetScore {
+			score = consts.TargetScore
 		}
 		drawTextCentered(
 			screen,
@@ -157,12 +158,12 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 }
 
 func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
-	t := time.UnixMilli(int64(float32(g.elapsedFrames) / tps * 1000))
+	t := time.UnixMilli(int64(float32(g.elapsedFrames) / consts.Tps * 1000))
 	drawTextCentered(
 		screen,
 		t.Format("04:05.0"),
 		colornames.White,
-		gridDimPx-float64(pxterm16Height)*1.5,
+		consts.GridDimPx-float64(pxterm16Height)*1.5,
 		pxterm16.Font,
 	)
 }
@@ -171,7 +172,7 @@ func (g *Game) drawCountdown(screen *ebiten.Image) {
 	if g.countdown <= 0 {
 		return
 	}
-	count := int(math.Ceil(float64(g.countdown)/tps)) - 1
+	count := int(math.Ceil(float64(g.countdown)/consts.Tps)) - 1
 	var txt string
 	switch count {
 	case 3:
@@ -185,13 +186,13 @@ func (g *Game) drawCountdown(screen *ebiten.Image) {
 	default:
 		txt = "WAIT..."
 	}
-	drawTextCentered(screen, txt, color.White, gridDimPx/2.5, pxterm24.Font)
+	drawTextCentered(screen, txt, color.White, consts.GridDimPx/2.5, pxterm24.Font)
 	if count > 0 {
 		drawTextCentered(
 			screen,
-			fmt.Sprintf("TARGET SCORE: %d", targetScore),
+			fmt.Sprintf("TARGET SCORE: %d", consts.TargetScore),
 			colornames.Yellow,
-			gridDimPx/2.5+float64(pxterm24Height*2),
+			consts.GridDimPx/2.5+float64(pxterm24Height*2),
 			pxterm24.Font,
 		)
 	}
@@ -199,23 +200,23 @@ func (g *Game) drawCountdown(screen *ebiten.Image) {
 
 func drawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top float64, font *pixfont.PixFont) {
 	txtWidth := font.MeasureString(txt)
-	font.DrawString(screen, (gridDimPx-txtWidth)/2, int(top), txt, colour)
+	font.DrawString(screen, (consts.GridDimPx-txtWidth)/2, int(top), txt, colour)
 }
 
 func (g *Game) drawItems(screen *ebiten.Image) {
-	for i := 0; i < gridSize; i++ {
-		for j := 0; j < gridSize; j++ {
+	for i := 0; i < consts.GridSize; i++ {
+		for j := 0; j < consts.GridSize; j++ {
 			if val := g.grid[i][j]; val != nil {
 				switch item := val.(type) {
 				case *Link:
-					shrink := (1 - float32(item.HealthPercent)/100) * cellDimPx * 0.5
+					shrink := (1 - float32(item.HealthPercent)/100) * consts.CellDimPx * 0.5
 					if item != item.Snake.Links[0] {
 						vector.DrawFilledRect(
 							screen,
-							float32(item.X*cellDimPx)+shrink,
-							float32(item.Y*cellDimPx)+shrink,
-							cellDimPx-shrink*2,
-							cellDimPx-shrink*2,
+							float32(item.X*consts.CellDimPx)+shrink,
+							float32(item.Y*consts.CellDimPx)+shrink,
+							consts.CellDimPx-shrink*2,
+							consts.CellDimPx-shrink*2,
 							withRedness(item.Snake.Colour, item.Redness),
 							false,
 						)
@@ -223,25 +224,25 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 						var x1, y1, x2, y2 float32
 						switch item.Snake.Direction {
 						case direction.Up:
-							x1 = float32(item.X*cellDimPx) + eyeGapPx
-							y1 = float32(item.Y*cellDimPx) + eyeGapPx
-							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
-							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+							x1 = float32(item.X*consts.CellDimPx) + consts.EyeGapPx
+							y1 = float32(item.Y*consts.CellDimPx) + consts.EyeGapPx
+							x2 = float32((item.X+1)*consts.CellDimPx) - consts.EyeGapPx
+							y2 = float32(item.Y*consts.CellDimPx) + consts.EyeGapPx
 						case direction.Down:
-							x1 = float32(item.X*cellDimPx) + eyeGapPx
-							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
-							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
-							y2 = float32((item.Y+1)*cellDimPx) - eyeGapPx
+							x1 = float32(item.X*consts.CellDimPx) + consts.EyeGapPx
+							y1 = float32((item.Y+1)*consts.CellDimPx) - consts.EyeGapPx
+							x2 = float32((item.X+1)*consts.CellDimPx) - consts.EyeGapPx
+							y2 = float32((item.Y+1)*consts.CellDimPx) - consts.EyeGapPx
 						case direction.Left:
-							x1 = float32(item.X*cellDimPx) + eyeGapPx
-							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
-							x2 = float32(item.X*cellDimPx) + eyeGapPx
-							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+							x1 = float32(item.X*consts.CellDimPx) + consts.EyeGapPx
+							y1 = float32((item.Y+1)*consts.CellDimPx) - consts.EyeGapPx
+							x2 = float32(item.X*consts.CellDimPx) + consts.EyeGapPx
+							y2 = float32(item.Y*consts.CellDimPx) + consts.EyeGapPx
 						case direction.Right:
-							x1 = float32((item.X+1)*cellDimPx) - eyeGapPx
-							y1 = float32((item.Y+1)*cellDimPx) - eyeGapPx
-							x2 = float32((item.X+1)*cellDimPx) - eyeGapPx
-							y2 = float32(item.Y*cellDimPx) + eyeGapPx
+							x1 = float32((item.X+1)*consts.CellDimPx) - consts.EyeGapPx
+							y1 = float32((item.Y+1)*consts.CellDimPx) - consts.EyeGapPx
+							x2 = float32((item.X+1)*consts.CellDimPx) - consts.EyeGapPx
+							y2 = float32(item.Y*consts.CellDimPx) + consts.EyeGapPx
 						case direction.None:
 						}
 						if x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0 {
@@ -249,7 +250,7 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 								screen,
 								x1,
 								y1,
-								eyeRadiusPx,
+								consts.EyeRadiusPx,
 								withRedness(item.Snake.Colour, item.Redness),
 								false,
 							)
@@ -257,17 +258,17 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 								screen,
 								x2,
 								y2,
-								eyeRadiusPx,
+								consts.EyeRadiusPx,
 								withRedness(item.Snake.Colour, item.Redness),
 								false,
 							)
 						} else {
 							vector.DrawFilledRect(
 								screen,
-								float32(item.X*cellDimPx),
-								float32(item.Y*cellDimPx),
-								cellDimPx,
-								cellDimPx,
+								float32(item.X*consts.CellDimPx),
+								float32(item.Y*consts.CellDimPx),
+								consts.CellDimPx,
+								consts.CellDimPx,
 								withRedness(item.Snake.Colour, item.Redness),
 								false,
 							)
@@ -276,10 +277,10 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 				case *Apple:
 					vector.DrawFilledRect(
 						screen,
-						float32(item.X*cellDimPx),
-						float32(item.Y*cellDimPx),
-						cellDimPx,
-						cellDimPx,
+						float32(item.X*consts.CellDimPx),
+						float32(item.Y*consts.CellDimPx),
+						consts.CellDimPx,
+						consts.CellDimPx,
 						colornames.Red,
 						false,
 					)
@@ -291,18 +292,18 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 
 func (g *Game) drawScores(screen *ebiten.Image) {
 	scoresAtTop := len(g.snakes)
-	if scoresAtTop > maxScoresAtTop {
-		scoresAtTop = maxScoresAtTop
+	if scoresAtTop > consts.MaxScoresAtTop {
+		scoresAtTop = consts.MaxScoresAtTop
 	}
 	g.drawScoreRow(screen, g.snakes[:scoresAtTop], pxterm24Height/2)
 	// when there are many players, not all scores can be fit in one line
-	g.drawScoreRow(screen, g.snakes[scoresAtTop:], gridDimPx-pxterm24Height-pxterm16Height*2)
+	g.drawScoreRow(screen, g.snakes[scoresAtTop:], consts.GridDimPx-pxterm24Height-pxterm16Height*2)
 }
 
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.state != Action || snake.Score+approachingTargetScoreGap < targetScore || (g.elapsedFrames/(tps/4))%2 > 0 {
+		if g.state != Action || snake.Score+consts.ApproachingTargetScoreGap < consts.TargetScore || (g.elapsedFrames/(consts.Tps/4))%2 > 0 {
 			txt, colour := g.scoreStrAndColourForIthSnake(snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
@@ -325,12 +326,12 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 
 func (g *Game) scoreStrAndColourForIthSnake(snake *Snake) (string, color.Color) {
 	score := snake.Score
-	if score > targetScore {
-		score = targetScore
+	if score > consts.TargetScore {
+		score = consts.TargetScore
 	}
 	txt := fmt.Sprintf(scoreFmt, score)
 	var colour color.Color
-	if g.state == Action && g.countdown <= tps {
+	if g.state == Action && g.countdown <= consts.Tps {
 		colour = snake.Colour
 	} else {
 		colour = withRedness(snake.Colour, snake.Links[0].Redness)

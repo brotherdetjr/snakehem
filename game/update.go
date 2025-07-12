@@ -9,6 +9,7 @@ import (
 	"os"
 	"slices"
 	. "snakehem/apple"
+	"snakehem/consts"
 	"snakehem/controllers"
 	"snakehem/controllers/keyboard"
 	. "snakehem/direction"
@@ -37,7 +38,7 @@ func (g *Game) Update() error {
 		}
 		for _, snake := range g.snakes {
 			head := snake.Links[0]
-			if g.countdown <= tps {
+			if g.countdown <= consts.Tps {
 				head.ChangeRedness(0.2 * snake.HeadRednessGrowth)
 				if head.Redness >= 1 || head.Redness <= 0 {
 					snake.HeadRednessGrowth = -snake.HeadRednessGrowth
@@ -53,10 +54,10 @@ func (g *Game) Update() error {
 				}
 			}
 		}
-		if g.countdown > tps {
+		if g.countdown > consts.Tps {
 			break
 		}
-		if g.countdown == tps {
+		if g.countdown == consts.Tps {
 			for _, snake := range g.snakes {
 				snake.Direction = getInitialDirection(snake)
 			}
@@ -78,54 +79,56 @@ func (g *Game) Update() error {
 					log.Info().Any("snakeId", snake.Controller).Str("direction", "Right").Msg("New direction")
 				}
 			}
-			nX, nY := newHeadCoords(snake, direction)
-			// not biting self in the neck, preserving same direction if the case
-			if len(snake.Links) > 1 && nX == snake.Links[1].X && nY == snake.Links[1].Y {
-				direction = snake.Direction
-				nX, nY = newHeadCoords(snake, direction)
-			}
-			if g.grid[nY][nX] == nil {
-				tail := snake.Links[len(snake.Links)-1]
-				oldTailX := tail.X
-				oldTailY := tail.Y
-				for i := len(snake.Links) - 1; i > 0; i-- {
-					link := snake.Links[i]
-					prevLink := snake.Links[i-1]
-					link.X = prevLink.X
-					link.Y = prevLink.Y
+			if g.elapsedFrames%consts.TpsMultiplier == 0 {
+				nX, nY := newHeadCoords(snake, direction)
+				// not biting self in the neck, preserving same direction if the case
+				if len(snake.Links) > 1 && nX == snake.Links[1].X && nY == snake.Links[1].Y {
+					direction = snake.Direction
+					nX, nY = newHeadCoords(snake, direction)
 				}
-				snake.Links[0].X = nX
-				snake.Links[0].Y = nY
-				if len(snake.Links) < snakeTargetLength {
-					snake.Links = append(snake.Links, &Link{
-						HealthPercent: 100,
-						Snake:         snake,
-						X:             oldTailX,
-						Y:             oldTailY,
-						Redness:       0,
-					})
-				} else {
-					g.grid[oldTailY][oldTailX] = nil
-				}
-				for _, link := range snake.Links {
-					g.grid[link.Y][link.X] = link
-				}
-			} else if g.fadeCountdown == 0 {
-				switch item := g.grid[nY][nX].(type) {
-				case *Link:
-					idx := slices.Index(item.Snake.Links, item)
-					if idx > 0 {
-						g.biteSnake(item, snake, idx)
+				if g.grid[nY][nX] == nil {
+					tail := snake.Links[len(snake.Links)-1]
+					oldTailX := tail.X
+					oldTailY := tail.Y
+					for i := len(snake.Links) - 1; i > 0; i-- {
+						link := snake.Links[i]
+						prevLink := snake.Links[i-1]
+						link.X = prevLink.X
+						link.Y = prevLink.Y
 					}
-				case *Apple:
-					g.incScore(snake, appleScore)
-					g.grid[nY][nX] = nil
-					g.applePresent = false
+					snake.Links[0].X = nX
+					snake.Links[0].Y = nY
+					if len(snake.Links) < consts.SnakeTargetLength {
+						snake.Links = append(snake.Links, &Link{
+							HealthPercent: 100,
+							Snake:         snake,
+							X:             oldTailX,
+							Y:             oldTailY,
+							Redness:       0,
+						})
+					} else {
+						g.grid[oldTailY][oldTailX] = nil
+					}
+					for _, link := range snake.Links {
+						g.grid[link.Y][link.X] = link
+					}
+				} else if g.fadeCountdown == 0 {
+					switch item := g.grid[nY][nX].(type) {
+					case *Link:
+						idx := slices.Index(item.Snake.Links, item)
+						if idx > 0 {
+							g.biteSnake(item, snake, idx)
+						}
+					case *Apple:
+						g.incScore(snake, consts.AppleScore)
+						g.grid[nY][nX] = nil
+						g.applePresent = false
+					}
 				}
 			}
 			snake.Direction = direction
 		}
-		if !g.applePresent && rand.IntN(newAppleProbabilityParam) == 0 {
+		if !g.applePresent && rand.IntN(consts.NewAppleProbabilityParam) == 0 {
 			g.tryToPutAnotherApple()
 		}
 		g.elapsedFrames++
@@ -137,15 +140,15 @@ func (g *Game) Update() error {
 
 func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 	targetSnake := bittenLink.Snake
-	bittenLink.HealthPercent -= healthReductionPerBite
+	bittenLink.HealthPercent -= consts.HealthReductionPerBite
 	bittenLink.Redness = 1
 	targetSnake.Controller.Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
-		g.incScore(bitingSnake, bitLinkScore)
+		g.incScore(bitingSnake, consts.BitLinkScore)
 	}
 	if bittenLink.HealthPercent <= 0 {
 		if targetSnake != bitingSnake {
-			g.incScore(bitingSnake, (len(targetSnake.Links)-idx+1)*nippedTailLinkBonusMultiplier)
+			g.incScore(bitingSnake, (len(targetSnake.Links)-idx+1)*consts.NippedTailLinkBonusMultiplier)
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
@@ -153,15 +156,15 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
-	if bitingSnake.Score >= targetScore {
-		g.fadeCountdown = gridFadeCountdown
+	if bitingSnake.Score >= consts.TargetScore {
+		g.fadeCountdown = consts.GridFadeCountdown
 	}
 }
 
 func (g *Game) incScore(snake *Snake, delta int) {
 	snake.Score += delta
-	if snake.Score >= targetScore {
-		g.fadeCountdown = gridFadeCountdown
+	if snake.Score >= consts.TargetScore {
+		g.fadeCountdown = consts.GridFadeCountdown
 	}
 }
 
@@ -174,12 +177,12 @@ func (g *Game) updateHeadCount() {
 		if c.IsAnyJustPressed() {
 			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })
 			if snakeIdx == -1 {
-				if len(g.snakes) < maxSnakes {
+				if len(g.snakes) < consts.MaxSnakes {
 					for _, snake := range g.snakes {
 						head := snake.Links[0]
 						g.grid[head.Y][head.X] = nil
 					}
-					g.snakes = append(g.snakes, NewSnake(c, snakeColours[len(g.snakes)]))
+					g.snakes = append(g.snakes, NewSnake(c, consts.SnakeColours[len(g.snakes)]))
 					g.layoutSnakes()
 				}
 			} else {
@@ -212,8 +215,8 @@ func (g *Game) layoutSnakes() {
 	delta := 2 * math.Pi / float64(len(g.snakes))
 	alpha := float64(0)
 	for _, s := range g.snakes {
-		y := gridSize/2 - int(math.Cos(alpha)*gridSize/3)
-		x := gridSize/2 + int(math.Sin(alpha)*gridSize/3)
+		y := consts.GridSize/2 - int(math.Cos(alpha)*consts.GridSize/3)
+		x := consts.GridSize/2 + int(math.Sin(alpha)*consts.GridSize/3)
 		head := s.Links[0]
 		head.X = x
 		head.Y = y
@@ -233,10 +236,10 @@ func (g *Game) isAnyButtonPressed(id ebiten.GamepadID) bool {
 }
 
 func (g *Game) randomUnoccupiedCell() (int, int) {
-	x := rand.IntN(gridSize)
-	y := rand.IntN(gridSize)
-	for ; y < gridSize; y++ {
-		for ; x < gridSize; x++ {
+	x := rand.IntN(consts.GridSize)
+	y := rand.IntN(consts.GridSize)
+	for ; y < consts.GridSize; y++ {
+		for ; x < consts.GridSize; x++ {
 			if g.grid[y][x] == nil {
 				return x, y
 			}
@@ -255,9 +258,9 @@ func (g *Game) tryToPutAnotherApple() {
 }
 
 func (g *Game) restartPreservingSnakes() {
-	g.grid = [gridSize][gridSize]any{}
+	g.grid = [consts.GridSize][consts.GridSize]any{}
 	g.state = Lobby
-	g.countdown = tps * countdownSeconds
+	g.countdown = consts.Tps * consts.CountdownSeconds
 	g.elapsedFrames = 0
 	g.fadeCountdown = 0
 	g.applePresent = false
@@ -274,7 +277,7 @@ func getInitialDirection(s *Snake) Direction {
 	head := s.Links[0]
 	x := head.X
 	y := head.Y
-	midPoint := gridSize/2 + 1
+	midPoint := consts.GridSize/2 + 1
 	if math.Abs(float64(midPoint-x)) > math.Abs(float64(midPoint-y)) {
 		if midPoint < x {
 			return Left
@@ -296,15 +299,15 @@ func newHeadCoords(s *Snake, direction Direction) (int, int) {
 	nY := head.Y + direction.Dy()
 	// assuming Dx and Dy can only be -1, 0, 1
 	if nX < 0 {
-		nX = gridSize - 1
+		nX = consts.GridSize - 1
 	}
 	if nY < 0 {
-		nY = gridSize - 1
+		nY = consts.GridSize - 1
 	}
-	if nX >= gridSize {
+	if nX >= consts.GridSize {
 		nX = 0
 	}
-	if nY >= gridSize {
+	if nY >= consts.GridSize {
 		nY = 0
 	}
 	return nX, nY

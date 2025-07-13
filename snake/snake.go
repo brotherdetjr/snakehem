@@ -2,6 +2,7 @@ package snake
 
 import (
 	"image/color"
+	"math"
 	"snakehem/consts"
 	"snakehem/controllers/controller"
 	. "snakehem/direction"
@@ -28,7 +29,6 @@ func NewSnake(controller controller.Controller, colour color.Color) *Snake {
 	snake := &Snake{
 		Links:             make([]*Link, 1),
 		Colour:            colour,
-		Direction:         None,
 		Score:             0,
 		Controller:        controller,
 		HeadRednessGrowth: -1,
@@ -39,6 +39,28 @@ func NewSnake(controller controller.Controller, colour color.Color) *Snake {
 		Redness:       1,
 	}
 	return snake
+}
+
+func (s *Snake) PickInitialDirection() {
+	head := s.Links[0]
+	x := head.X
+	y := head.Y
+	midPoint := consts.GridSize/2 + 1
+	direction := None
+	if math.Abs(float64(midPoint-x)) > math.Abs(float64(midPoint-y)) {
+		if midPoint < x {
+			direction = Left
+		} else {
+			direction = Right
+		}
+	} else {
+		if midPoint < y {
+			direction = Up
+		} else {
+			direction = Down
+		}
+	}
+	s.Direction = direction
 }
 
 func (l *Link) ChangeRedness(delta float32) {

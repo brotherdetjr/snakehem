@@ -220,6 +220,16 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 							withRedness(item.Snake.Colour, item.Redness),
 							false,
 						)
+					} else if g.countdown > consts.Tps {
+						vector.DrawFilledRect(
+							screen,
+							float32(item.X*consts.CellDimPx)+shrink,
+							float32(item.Y*consts.CellDimPx)+shrink,
+							consts.CellDimPx-shrink*2,
+							consts.CellDimPx-shrink*2,
+							withRedness(item.Snake.Colour, item.Redness),
+							false,
+						)
 					} else {
 						var x1, y1, x2, y2 float32
 						switch item.Snake.Direction {

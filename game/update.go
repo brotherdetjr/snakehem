@@ -57,11 +57,6 @@ func (g *Game) Update() error {
 		if g.countdown > consts.Tps {
 			break
 		}
-		if g.countdown == consts.Tps {
-			for _, snake := range g.snakes {
-				snake.Direction = getInitialDirection(snake)
-			}
-		}
 		for _, snake := range g.snakes {
 			direction := snake.Direction
 			if g.fadeCountdown == 0 {
@@ -79,13 +74,13 @@ func (g *Game) Update() error {
 					log.Info().Any("snakeId", snake.Controller).Str("direction", "Right").Msg("New direction")
 				}
 			}
+			nX, nY := newHeadCoords(snake, direction)
+			// not biting self in the neck, preserving same direction if the case
+			if len(snake.Links) > 1 && nX == snake.Links[1].X && nY == snake.Links[1].Y {
+				direction = snake.Direction
+				nX, nY = newHeadCoords(snake, direction)
+			}
 			if g.elapsedFrames%consts.TpsMultiplier == 0 {
-				nX, nY := newHeadCoords(snake, direction)
-				// not biting self in the neck, preserving same direction if the case
-				if len(snake.Links) > 1 && nX == snake.Links[1].X && nY == snake.Links[1].Y {
-					direction = snake.Direction
-					nX, nY = newHeadCoords(snake, direction)
-				}
 				if g.grid[nY][nX] == nil {
 					tail := snake.Links[len(snake.Links)-1]
 					oldTailX := tail.X
@@ -222,6 +217,7 @@ func (g *Game) layoutSnakes() {
 		head.Y = y
 		g.grid[y][x] = head
 		alpha += delta
+		s.PickInitialDirection()
 	}
 }
 
@@ -268,28 +264,7 @@ func (g *Game) restartPreservingSnakes() {
 	for _, snake := range g.snakes {
 		snake.Score = 0
 		snake.Links = snake.Links[0:1]
-		snake.Direction = getInitialDirection(snake)
 		snake.HeadRednessGrowth = -1
-	}
-}
-
-func getInitialDirection(s *Snake) Direction {
-	head := s.Links[0]
-	x := head.X
-	y := head.Y
-	midPoint := consts.GridSize/2 + 1
-	if math.Abs(float64(midPoint-x)) > math.Abs(float64(midPoint-y)) {
-		if midPoint < x {
-			return Left
-		} else {
-			return Right
-		}
-	} else {
-		if midPoint < y {
-			return Up
-		} else {
-			return Down
-		}
 	}
 }
 

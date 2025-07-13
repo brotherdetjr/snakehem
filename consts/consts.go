@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	Fps                           = 10
+	GameSpeedFps                  = 10
 	TpsMultiplier                 = 6
-	Tps                           = Fps * TpsMultiplier
+	Tps                           = GameSpeedFps * TpsMultiplier
 	GridSize                      = 63
 	CellDimPx                     = 11
 	GridDimPx                     = GridSize * CellDimPx
@@ -18,10 +18,10 @@ const (
 	HealthReductionPerBite        = 10
 	NippedTailLinkBonusMultiplier = 2
 	BitLinkScore                  = 1
-	AppleScore                    = 50
+	AppleScore                    = 45
 	TargetScore                   = 999
 	MaxSnakes                     = len(SnakeColours)
-	ApproachingTargetScoreGap     = SnakeTargetLength * NippedTailLinkBonusMultiplier * 1.2
+	ApproachingTargetScoreGap     = SnakeTargetLength*NippedTailLinkBonusMultiplier - 1
 	GridFadeCountdown             = TpsMultiplier * 15
 	NewAppleProbabilityParam      = Tps * 3
 	EyeRadiusPx                   = 2

@@ -3,15 +3,16 @@ package game
 import (
 	_ "embed"
 	"fmt"
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/pbnjay/pixfont"
-	"github.com/rs/zerolog/log"
 	"math"
 	"snakehem/consts"
 	"snakehem/controllers/controller"
 	"snakehem/pxterm24"
 	. "snakehem/snake"
 	. "snakehem/state"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/pbnjay/pixfont"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed crt_shader.kage

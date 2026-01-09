@@ -18,7 +18,8 @@ func (k keyboard) Equals(controller controller.Controller) bool {
 }
 
 func (k keyboard) IsAnyJustPressed() bool {
-	return len(inpututil.AppendJustPressedKeys(nil)) > 0
+	return k.IsUpJustPressed() || k.IsDownJustPressed() || k.IsLeftJustPressed() ||
+		k.IsRightJustPressed() || k.IsExitJustPressed() || k.IsStartJustPressed()
 }
 
 func (k keyboard) IsUpJustPressed() bool {

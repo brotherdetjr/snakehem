@@ -36,8 +36,8 @@ type Game struct {
 func Run() {
 	pixfont.Spacing = 0
 	// debug doesn't work well in fullscreen mode
-	ebiten.SetWindowSize(960, 960)
-	//ebiten.SetFullscreen(true)
+	//ebiten.SetWindowSize(960, 960)
+	ebiten.SetFullscreen(true)
 	ebiten.SetTPS(consts.Tps)
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)

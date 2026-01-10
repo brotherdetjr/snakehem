@@ -9,7 +9,7 @@ import (
 )
 
 // CompositeRenderer composes all renderer components
-// Note: Currently uses *ebiten.Image directly. Will be abstracted in Phase 7 (Ebiten adapter)
+// Uses *ebiten.Image directly since vector drawing requires concrete Ebiten types
 type CompositeRenderer struct {
 	config        *config.GameConfig
 	fontManager   *FontManager

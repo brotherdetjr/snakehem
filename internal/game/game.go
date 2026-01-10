@@ -11,6 +11,7 @@ import (
 	"snakehem/internal/gamestate"
 	"snakehem/internal/interfaces"
 	"snakehem/internal/rendering"
+	"snakehem/pkg/ebiten_adapter"
 )
 
 // ErrUserExit is returned when the user requests to exit the game
@@ -45,8 +46,12 @@ func (g *Game) Update() error {
 		return ErrUserExit
 	}
 
-	// Get all active controllers
-	controllers := g.inputProvider.GetControllerInputs()
+	// Get all active controllers and convert to map
+	controllerSlice := g.inputProvider.GetControllerInputs()
+	controllers := make(map[string]interfaces.ControllerInput, len(controllerSlice))
+	for _, ctrl := range controllerSlice {
+		controllers[ctrl.ID()] = ctrl
+	}
 
 	// Create state context with all dependencies
 	ctx := &gamestate.StateContext{
@@ -82,24 +87,34 @@ func (g *Game) Update() error {
 
 // Draw renders the game to the screen
 // Delegates to the composite renderer based on current state
-func (g *Game) Draw(screen *ebiten.Image) {
+func (g *Game) Draw(screen interfaces.Screen) {
+	// Extract *ebiten.Image from interfaces.Screen
+	// Renderers use Ebiten-specific functions (like vector drawing) so need concrete type
+	var ebitenScreen *ebiten.Image
+	if adapter, ok := screen.(*ebiten_adapter.ScreenAdapter); ok {
+		ebitenScreen = adapter.EbitenImage()
+	} else {
+		// Fallback: this shouldn't happen in production
+		return
+	}
+
 	// Draw background
-	g.renderer.DrawBackground(screen)
+	g.renderer.DrawBackground(ebitenScreen)
 
 	// Draw grid (snakes and apples)
-	g.renderer.DrawGrid(screen, g.grid, g.countdown)
+	g.renderer.DrawGrid(ebitenScreen, g.grid, g.countdown)
 
 	// Draw state-specific UI
 	switch state := g.currentState.(type) {
 	case *gamestate.LobbyState:
-		g.renderer.DrawLobbyUI(screen, len(g.snakes))
-		g.renderer.DrawActionUI(screen, g.snakes, g.countdown, g.elapsedFrames, 0)
+		g.renderer.DrawLobbyUI(ebitenScreen, len(g.snakes))
+		g.renderer.DrawActionUI(ebitenScreen, g.snakes, g.countdown, g.elapsedFrames, 0)
 
 	case *gamestate.ActionState:
-		g.renderer.DrawActionUI(screen, g.snakes, g.countdown, g.elapsedFrames, g.fadeCountdown)
+		g.renderer.DrawActionUI(ebitenScreen, g.snakes, g.countdown, g.elapsedFrames, g.fadeCountdown)
 
 	case *gamestate.ScoreboardState:
-		g.renderer.DrawScoreboardUI(screen, g.snakes, g.elapsedFrames)
+		g.renderer.DrawScoreboardUI(ebitenScreen, g.snakes, g.elapsedFrames)
 
 	default:
 		// Unknown state - shouldn't happen
@@ -107,7 +122,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	// Apply post-processing (CRT shader)
-	g.renderer.ApplyPostProcessing(screen)
+	g.renderer.ApplyPostProcessing(ebitenScreen)
 }
 
 // Layout returns the game's logical screen size

@@ -30,9 +30,19 @@ This file tracks bugs found during testing of the refactored codebase.
 In `internal/game/game.go`, the Draw() method is calling both `DrawLobbyUI()` AND `DrawActionUI()` in the LobbyState case. Only `DrawLobbyUI()` should be called.
 
 ### Fix
-Remove the `DrawActionUI()` call from the LobbyState case in game.Draw().
+✅ Removed the `DrawActionUI()` call from the LobbyState case in `internal/game/game.go:111`.
 
-### Test Scenario
-A test could verify that in lobby state, only lobby-specific UI elements are rendered and action UI elements are not.
+### Test Coverage
+✅ Created `internal/game/game_test.go` with 3 tests:
+- `TestDraw_LobbyState` - Verifies lobby state only calls DrawLobbyUI (Bug #1 fix)
+- `TestDraw_ActionState` - Verifies action state only calls DrawActionUI
+- `TestDraw_ScoreboardState` - Verifies scoreboard state only calls DrawScoreboardUI
+
+All tests passing ✅
+
+### Files Changed
+- `internal/game/game.go` - Removed erroneous DrawActionUI call
+- `internal/game/game.go` - Added GameRenderer interface for testability
+- `internal/game/game_test.go` - Added test coverage (NEW)
 
 ---

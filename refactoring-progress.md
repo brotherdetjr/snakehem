@@ -5,7 +5,7 @@
 
 ## Overall Status
 
-Currently on **Phase 8: Testing Infrastructure** - Ready to create mocks and unit tests.
+Currently on **Phase 9: Error Handling Cleanup** - Ready to create new main.go and wire everything together.
 
 ### Phases Completed ✅
 
@@ -16,10 +16,10 @@ Currently on **Phase 8: Testing Infrastructure** - Ready to create mocks and uni
 - ✅ **Phase 5**: Input Abstraction (provider & controllers)
 - ✅ **Phase 6**: Dependency Injection (builder.go and game.go - TESTED & WORKING)
 - ✅ **Phase 7**: Ebiten Adapter (pkg/ebiten_adapter/adapter.go - TESTED & WORKING)
+- ✅ **Phase 8**: Testing Infrastructure (mocks + unit tests - ALL TESTS PASSING)
 
 ### Phases Remaining ⏳
 
-- **Phase 8**: Testing Infrastructure (mocks & unit tests)
 - **Phase 9**: Error Handling Cleanup (new cmd/snakehem/main.go)
 - **Phase 10**: Remove Dot Imports
 - **Validation**: Test, build, verify
@@ -80,6 +80,56 @@ Renderers continue using `*ebiten.Image` directly since they require Ebiten-spec
 
 ---
 
+## Phase 8 Status (COMPLETED ✅)
+
+### Mock Implementations Created
+
+#### `/home/brotherdetjr/snakehem/internal/mocks/random_source.go` ✅
+- MockRandomSource with deterministic IntN() values
+- Supports cycling through predefined values for reproducible tests
+- Reset() method to restart value sequence
+
+#### `/home/brotherdetjr/snakehem/internal/mocks/input.go` ✅
+- MockControllerInput with all button state setters
+- MockInputProvider for managing mock controllers
+- Vibration tracking for testing haptic feedback
+- Full interface compliance with interfaces.ControllerInput and interfaces.InputProvider
+
+#### `/home/brotherdetjr/snakehem/internal/mocks/screen.go` ✅
+- MockScreen recording all Fill() and DrawImage() calls
+- MockGeoM and MockColorM for testing transformations
+- Call counting and inspection methods for assertions
+
+### Unit Tests Created
+
+#### `/home/brotherdetjr/snakehem/internal/engine/physics_engine_test.go` ✅
+- 11 tests for CalculateNewHeadPosition (all directions, wrapping)
+- 3 tests for different grid sizes
+- **ALL TESTS PASSING** ✅
+
+#### `/home/brotherdetjr/snakehem/internal/engine/scoring_engine_test.go` ✅
+- 4 tests for ProcessApple (including target score trigger)
+- 5 tests for ProcessBite (biting, nipping tails, self-bite)
+- 7 tests for HasWinner (various scenarios)
+- **ALL TESTS PASSING** ✅
+
+#### `/home/brotherdetjr/snakehem/internal/gamestate/lobby_state_test.go` ✅
+- 5 tests for ShouldTransitionToAction
+- 5 tests for findSnakeByController
+- 1 test for Update redness fading
+- **ALL TESTS PASSING** ✅
+
+### Test Results Summary
+
+```
+ok  	snakehem/internal/engine	0.002s
+ok  	snakehem/internal/gamestate	0.002s
+```
+
+**Total: 36 test cases, ALL PASSING** ✅
+
+---
+
 ## Files Created This Session
 
 ### Phase 4: Rendering (Completed)
@@ -109,6 +159,14 @@ Renderers continue using `*ebiten.Image` directly since they require Ebiten-spec
 
 ### Phase 7: Ebiten Adapter (Completed)
 1. `/home/brotherdetjr/snakehem/pkg/ebiten_adapter/adapter.go`
+
+### Phase 8: Testing Infrastructure (Completed)
+1. `/home/brotherdetjr/snakehem/internal/mocks/random_source.go`
+2. `/home/brotherdetjr/snakehem/internal/mocks/input.go`
+3. `/home/brotherdetjr/snakehem/internal/mocks/screen.go`
+4. `/home/brotherdetjr/snakehem/internal/engine/physics_engine_test.go`
+5. `/home/brotherdetjr/snakehem/internal/engine/scoring_engine_test.go`
+6. `/home/brotherdetjr/snakehem/internal/gamestate/lobby_state_test.go`
 
 ---
 
@@ -215,12 +273,9 @@ When resuming this refactoring:
 
 2. **✅ Phase 7 COMPLETED**: Ebiten adapter created and tested
 
-3. **Start Phase 8**: Testing Infrastructure
-   - Create mock implementations for interfaces
-   - Write unit tests for key components
-   - Test state transitions, physics engine, scoring engine
+3. **✅ Phase 8 COMPLETED**: Testing infrastructure with 36 passing tests
 
-4. **Phase 9**: Error Handling Cleanup
+4. **Start Phase 9**: Error Handling Cleanup
    - Create new `cmd/snakehem/main.go`
    - Wire everything together using GameBuilder
    - Clean error handling (no more os.Exit/log.Fatal in library code)

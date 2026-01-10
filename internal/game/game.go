@@ -10,12 +10,22 @@ import (
 	"snakehem/internal/entities"
 	"snakehem/internal/gamestate"
 	"snakehem/internal/interfaces"
-	"snakehem/internal/rendering"
 	"snakehem/pkg/ebiten_adapter"
 )
 
 // ErrUserExit is returned when the user requests to exit the game
 var ErrUserExit = errors.New("user requested exit")
+
+// GameRenderer defines the interface for the composite game renderer
+// This allows for testing with mock implementations
+type GameRenderer interface {
+	DrawBackground(screen *ebiten.Image)
+	DrawGrid(screen *ebiten.Image, grid *entities.GameGrid, countdown int)
+	DrawLobbyUI(screen *ebiten.Image, snakeCount int)
+	DrawActionUI(screen *ebiten.Image, snakes []*entities.Snake, countdown int, elapsedFrames uint64, fadeCountdown int)
+	DrawScoreboardUI(screen *ebiten.Image, snakes []*entities.Snake, elapsedFrames uint64)
+	ApplyPostProcessing(screen *ebiten.Image)
+}
 
 // Game orchestrates the game using dependency-injected components
 // This is a thin layer that delegates to state management and rendering
@@ -23,7 +33,7 @@ type Game struct {
 	// Injected dependencies (immutable)
 	config        *config.GameConfig
 	inputProvider interfaces.InputProvider
-	renderer      *rendering.CompositeRenderer
+	renderer      GameRenderer
 	random        interfaces.RandomSource
 	physics       *engine.PhysicsEngine
 	scoring       *engine.ScoringEngine
@@ -108,7 +118,6 @@ func (g *Game) Draw(screen interfaces.Screen) {
 	switch state := g.currentState.(type) {
 	case *gamestate.LobbyState:
 		g.renderer.DrawLobbyUI(ebitenScreen, len(g.snakes))
-		g.renderer.DrawActionUI(ebitenScreen, g.snakes, g.countdown, g.elapsedFrames, 0)
 
 	case *gamestate.ActionState:
 		g.renderer.DrawActionUI(ebitenScreen, g.snakes, g.countdown, g.elapsedFrames, g.fadeCountdown)

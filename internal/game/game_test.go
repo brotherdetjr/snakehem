@@ -30,7 +30,7 @@ func (m *MockCompositeRenderer) DrawGrid(screen *ebiten.Image, grid *entities.Ga
 	m.drawGridCalled = true
 }
 
-func (m *MockCompositeRenderer) DrawLobbyUI(screen *ebiten.Image, snakeCount int) {
+func (m *MockCompositeRenderer) DrawLobbyUI(screen *ebiten.Image, snakes []*entities.Snake, elapsedFrames uint64, countdown int) {
 	m.drawLobbyUICalled = true
 }
 

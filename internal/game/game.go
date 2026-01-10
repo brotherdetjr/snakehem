@@ -21,7 +21,7 @@ var ErrUserExit = errors.New("user requested exit")
 type GameRenderer interface {
 	DrawBackground(screen *ebiten.Image)
 	DrawGrid(screen *ebiten.Image, grid *entities.GameGrid, countdown int)
-	DrawLobbyUI(screen *ebiten.Image, snakeCount int)
+	DrawLobbyUI(screen *ebiten.Image, snakes []*entities.Snake, elapsedFrames uint64, countdown int)
 	DrawActionUI(screen *ebiten.Image, snakes []*entities.Snake, countdown int, elapsedFrames uint64, fadeCountdown int)
 	DrawScoreboardUI(screen *ebiten.Image, snakes []*entities.Snake, elapsedFrames uint64)
 	ApplyPostProcessing(screen *ebiten.Image)
@@ -84,6 +84,9 @@ func (g *Game) Update() error {
 		return err
 	}
 
+	// Copy back the snakes slice in case it was modified (e.g., snake added/removed)
+	g.snakes = ctx.Snakes
+
 	// Update current state if transition occurred
 	if nextState != g.currentState {
 		g.currentState = nextState
@@ -117,7 +120,7 @@ func (g *Game) Draw(screen interfaces.Screen) {
 	// Draw state-specific UI
 	switch state := g.currentState.(type) {
 	case *gamestate.LobbyState:
-		g.renderer.DrawLobbyUI(ebitenScreen, len(g.snakes))
+		g.renderer.DrawLobbyUI(ebitenScreen, g.snakes, g.elapsedFrames, g.countdown)
 
 	case *gamestate.ActionState:
 		g.renderer.DrawActionUI(ebitenScreen, g.snakes, g.countdown, g.elapsedFrames, g.fadeCountdown)

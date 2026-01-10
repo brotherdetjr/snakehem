@@ -61,9 +61,13 @@ func (cr *CompositeRenderer) DrawGrid(screen *ebiten.Image, grid *entities.GameG
 	}
 }
 
-// DrawLobbyUI draws the lobby state UI
-func (cr *CompositeRenderer) DrawLobbyUI(screen *ebiten.Image, snakeCount int) {
-	cr.uiRenderer.DrawLobbyUI(screen, snakeCount)
+// DrawLobbyUI draws the lobby state UI including scores
+func (cr *CompositeRenderer) DrawLobbyUI(screen *ebiten.Image, snakes []*entities.Snake, elapsedFrames uint64, countdown int) {
+	// Draw scores (with redness fading)
+	cr.uiRenderer.DrawScores(screen, snakes, elapsedFrames, false, countdown)
+
+	// Draw lobby instructions
+	cr.uiRenderer.DrawLobbyUI(screen, len(snakes))
 }
 
 // DrawActionUI draws the action state UI (scores, countdown, time)

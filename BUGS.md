@@ -7,7 +7,7 @@ This file tracks bugs found during testing of the refactored codebase.
 ## Bug #1: Lobby State Shows Action UI Elements
 
 **Date**: 2026-01-10
-**Status**: 🔴 OPEN
+**Status**: ✅ FIXED
 **Severity**: High
 **Reporter**: User
 

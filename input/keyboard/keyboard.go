@@ -1,10 +1,11 @@
 package keyboard
 
 import (
+	"snakehem/input/controller"
+	"time"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"snakehem/controllers/controller"
-	"time"
 )
 
 type keyboard struct {

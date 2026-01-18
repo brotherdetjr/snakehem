@@ -1,11 +1,12 @@
-package controllers
+package input
 
 import (
+	"snakehem/input/controller"
+	"snakehem/input/gamepad"
+	"snakehem/input/keyboard"
+	"snakehem/input/keyboardwasd"
+
 	"github.com/hajimehoshi/ebiten/v2"
-	"snakehem/controllers/controller"
-	"snakehem/controllers/gamepad"
-	"snakehem/controllers/keyboard"
-	"snakehem/controllers/keyboardwasd"
 )
 
 func Controllers() []controller.Controller {

@@ -3,8 +3,8 @@ package snake
 import (
 	"image/color"
 	"math"
-	"snakehem/consts"
 	"snakehem/input/controller"
+	"snakehem/model"
 	"snakehem/model/direction"
 )
 
@@ -45,7 +45,7 @@ func (s *Snake) PickInitialDirection() {
 	head := s.Links[0]
 	x := head.X
 	y := head.Y
-	midPoint := consts.GridSize/2 + 1
+	midPoint := model.GridSize/2 + 1
 	dir := direction.None
 	if math.Abs(float64(midPoint-x)) > math.Abs(float64(midPoint-y)) {
 		if midPoint < x {
@@ -64,7 +64,7 @@ func (s *Snake) PickInitialDirection() {
 }
 
 func (l *Link) ChangeRedness(delta float32) {
-	l.Redness += delta / consts.TpsMultiplier
+	l.Redness += delta / model.TpsMultiplier
 	if l.Redness < 0 {
 		l.Redness = 0
 	} else if l.Redness > 1 {

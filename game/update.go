@@ -5,9 +5,10 @@ import (
 	"math/rand/v2"
 	"os"
 	"slices"
-	"snakehem/consts"
+	"snakehem/graphics"
 	"snakehem/input"
 	"snakehem/input/keyboard"
+	"snakehem/model"
 	. "snakehem/model/apple"
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
@@ -39,7 +40,7 @@ func (g *Game) Update() error {
 		}
 		for _, snake := range g.snakes {
 			head := snake.Links[0]
-			if g.countdown <= consts.Tps {
+			if g.countdown <= model.Tps {
 				head.ChangeRedness(0.2 * snake.HeadRednessGrowth)
 				if head.Redness >= 1 || head.Redness <= 0 {
 					snake.HeadRednessGrowth = -snake.HeadRednessGrowth
@@ -55,7 +56,7 @@ func (g *Game) Update() error {
 				}
 			}
 		}
-		if g.countdown > consts.Tps {
+		if g.countdown > model.Tps {
 			break
 		}
 		for _, snake := range g.snakes {
@@ -81,7 +82,7 @@ func (g *Game) Update() error {
 				direction = snake.Direction
 				nX, nY = newHeadCoords(snake, direction)
 			}
-			if g.elapsedFrames%consts.TpsMultiplier == 0 {
+			if g.elapsedFrames%model.TpsMultiplier == 0 {
 				if g.grid[nY][nX] == nil {
 					tail := snake.Links[len(snake.Links)-1]
 					oldTailX := tail.X
@@ -94,7 +95,7 @@ func (g *Game) Update() error {
 					}
 					snake.Links[0].X = nX
 					snake.Links[0].Y = nY
-					if len(snake.Links) < consts.SnakeTargetLength {
+					if len(snake.Links) < model.SnakeTargetLength {
 						snake.Links = append(snake.Links, &Link{
 							HealthPercent: 100,
 							Snake:         snake,
@@ -116,7 +117,7 @@ func (g *Game) Update() error {
 							g.biteSnake(item, snake, idx)
 						}
 					case *Apple:
-						g.incScore(snake, consts.AppleScore)
+						g.incScore(snake, model.AppleScore)
 						g.grid[nY][nX] = nil
 						g.applePresent = false
 					}
@@ -124,7 +125,7 @@ func (g *Game) Update() error {
 			}
 			snake.Direction = direction
 		}
-		if !g.applePresent && rand.IntN(consts.NewAppleProbabilityParam) == 0 {
+		if !g.applePresent && rand.IntN(model.NewAppleProbabilityParam) == 0 {
 			g.tryToPutAnotherApple()
 		}
 		g.elapsedFrames++
@@ -136,15 +137,15 @@ func (g *Game) Update() error {
 
 func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 	targetSnake := bittenLink.Snake
-	bittenLink.HealthPercent -= consts.HealthReductionPerBite
+	bittenLink.HealthPercent -= model.HealthReductionPerBite
 	bittenLink.Redness = 1
 	targetSnake.Controller.Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
-		g.incScore(bitingSnake, consts.BitLinkScore)
+		g.incScore(bitingSnake, model.BitLinkScore)
 	}
 	if bittenLink.HealthPercent <= 0 {
 		if targetSnake != bitingSnake {
-			g.incScore(bitingSnake, (len(targetSnake.Links)-idx+1)*consts.NippedTailLinkBonusMultiplier)
+			g.incScore(bitingSnake, (len(targetSnake.Links)-idx+1)*model.NippedTailLinkBonusMultiplier)
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
@@ -152,15 +153,15 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
-	if bitingSnake.Score >= consts.TargetScore {
-		g.fadeCountdown = consts.GridFadeCountdown
+	if bitingSnake.Score >= model.TargetScore {
+		g.fadeCountdown = model.GridFadeCountdown
 	}
 }
 
 func (g *Game) incScore(snake *Snake, delta int) {
 	snake.Score += delta
-	if snake.Score >= consts.TargetScore {
-		g.fadeCountdown = consts.GridFadeCountdown
+	if snake.Score >= model.TargetScore {
+		g.fadeCountdown = model.GridFadeCountdown
 	}
 }
 
@@ -173,12 +174,12 @@ func (g *Game) updateHeadCount() {
 		if c.IsAnyJustPressed() {
 			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })
 			if snakeIdx == -1 {
-				if len(g.snakes) < consts.MaxSnakes {
+				if len(g.snakes) < model.MaxSnakes {
 					for _, snake := range g.snakes {
 						head := snake.Links[0]
 						g.grid[head.Y][head.X] = nil
 					}
-					g.snakes = append(g.snakes, NewSnake(c, consts.SnakeColours[len(g.snakes)]))
+					g.snakes = append(g.snakes, NewSnake(c, graphics.SnakeColours[len(g.snakes)]))
 					g.layoutSnakes()
 				}
 			} else {
@@ -211,8 +212,8 @@ func (g *Game) layoutSnakes() {
 	delta := 2 * math.Pi / float64(len(g.snakes))
 	alpha := float64(0)
 	for _, s := range g.snakes {
-		y := consts.GridSize/2 - int(math.Cos(alpha)*consts.GridSize/3)
-		x := consts.GridSize/2 + int(math.Sin(alpha)*consts.GridSize/3)
+		y := model.GridSize/2 - int(math.Cos(alpha)*model.GridSize/3)
+		x := model.GridSize/2 + int(math.Sin(alpha)*model.GridSize/3)
 		head := s.Links[0]
 		head.X = x
 		head.Y = y
@@ -233,10 +234,10 @@ func (g *Game) isAnyButtonPressed(id ebiten.GamepadID) bool {
 }
 
 func (g *Game) randomUnoccupiedCell() (int, int) {
-	x := rand.IntN(consts.GridSize)
-	y := rand.IntN(consts.GridSize)
-	for ; y < consts.GridSize; y++ {
-		for ; x < consts.GridSize; x++ {
+	x := rand.IntN(model.GridSize)
+	y := rand.IntN(model.GridSize)
+	for ; y < model.GridSize; y++ {
+		for ; x < model.GridSize; x++ {
 			if g.grid[y][x] == nil {
 				return x, y
 			}
@@ -255,9 +256,9 @@ func (g *Game) tryToPutAnotherApple() {
 }
 
 func (g *Game) restartPreservingSnakes() {
-	g.grid = [consts.GridSize][consts.GridSize]any{}
+	g.grid = [model.GridSize][model.GridSize]any{}
 	g.state = Lobby
-	g.countdown = consts.Tps * consts.CountdownSeconds
+	g.countdown = model.Tps * model.CountdownSeconds
 	g.elapsedFrames = 0
 	g.fadeCountdown = 0
 	g.applePresent = false
@@ -275,15 +276,15 @@ func newHeadCoords(s *Snake, direction Direction) (int, int) {
 	nY := head.Y + direction.Dy()
 	// assuming Dx and Dy can only be -1, 0, 1
 	if nX < 0 {
-		nX = consts.GridSize - 1
+		nX = model.GridSize - 1
 	}
 	if nY < 0 {
-		nY = consts.GridSize - 1
+		nY = model.GridSize - 1
 	}
-	if nX >= consts.GridSize {
+	if nX >= model.GridSize {
 		nX = 0
 	}
-	if nY >= consts.GridSize {
+	if nY >= model.GridSize {
 		nY = 0
 	}
 	return nX, nY

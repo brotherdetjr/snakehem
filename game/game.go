@@ -9,7 +9,7 @@ import (
 	"snakehem/input/controller"
 	"snakehem/model"
 	. "snakehem/model/snake"
-	. "snakehem/model/state"
+	. "snakehem/model/stage"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
@@ -24,7 +24,7 @@ type Game struct {
 	grid          [model.GridSize][model.GridSize]any
 	snakes        []*Snake
 	controllers   []controller.Controller
-	state         State
+	stage         Stage
 	countdown     int
 	elapsedFrames uint64
 	fadeCountdown int
@@ -44,7 +44,7 @@ func Run() {
 		grid:          [model.GridSize][model.GridSize]any{},
 		snakes:        nil,
 		controllers:   nil,
-		state:         Lobby,
+		stage:         Lobby,
 		countdown:     model.Tps * model.CountdownSeconds,
 		elapsedFrames: 0,
 		fadeCountdown: 0,

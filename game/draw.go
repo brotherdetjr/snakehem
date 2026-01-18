@@ -12,7 +12,7 @@ import (
 	. "snakehem/model/apple"
 	"snakehem/model/direction"
 	. "snakehem/model/snake"
-	. "snakehem/model/state"
+	. "snakehem/model/stage"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,7 +24,7 @@ import (
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	g.drawItems(screen)
-	switch g.state {
+	switch g.stage {
 	case Lobby:
 		g.drawScores(screen)
 		snakeCount := len(g.snakes)
@@ -315,7 +315,7 @@ func (g *Game) drawScores(screen *ebiten.Image) {
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.state != Action || snake.Score+consts.ApproachingTargetScoreGap < consts.TargetScore || (g.elapsedFrames/(consts.Tps/4))%2 > 0 {
+		if g.stage != Action || snake.Score+consts.ApproachingTargetScoreGap < consts.TargetScore || (g.elapsedFrames/(consts.Tps/4))%2 > 0 {
 			txt, colour := g.scoreStrAndColourForIthSnake(snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
@@ -343,7 +343,7 @@ func (g *Game) scoreStrAndColourForIthSnake(snake *Snake) (string, color.Color) 
 	}
 	txt := fmt.Sprintf(scoreFmt, score)
 	var colour color.Color
-	if g.state == Action && g.countdown <= consts.Tps {
+	if g.stage == Action && g.countdown <= consts.Tps {
 		colour = snake.Colour
 	} else {
 		colour = withRedness(snake.Colour, snake.Links[0].Redness)

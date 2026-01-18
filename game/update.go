@@ -12,7 +12,7 @@ import (
 	. "snakehem/model/apple"
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
-	. "snakehem/model/state"
+	. "snakehem/model/stage"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,7 +24,7 @@ func (g *Game) Update() error {
 	if keyboard.Instance.IsExitJustPressed() {
 		os.Exit(0)
 	}
-	switch g.state {
+	switch g.stage {
 	case Lobby:
 		g.updateHeadCount()
 	case Action:
@@ -34,7 +34,7 @@ func (g *Game) Update() error {
 		if g.fadeCountdown > 0 {
 			g.fadeCountdown--
 			if g.fadeCountdown == 0 {
-				g.state = Scoreboard
+				g.stage = Scoreboard
 				break
 			}
 		}
@@ -185,7 +185,7 @@ func (g *Game) updateHeadCount() {
 			} else {
 				g.snakes[snakeIdx].Links[0].Redness = 1
 				if c.IsStartJustPressed() && len(g.snakes) > 1 {
-					g.state = Action
+					g.stage = Action
 				}
 			}
 		}
@@ -257,7 +257,7 @@ func (g *Game) tryToPutAnotherApple() {
 
 func (g *Game) restartPreservingSnakes() {
 	g.grid = [model.GridSize][model.GridSize]any{}
-	g.state = Lobby
+	g.stage = Lobby
 	g.countdown = model.Tps * model.CountdownSeconds
 	g.elapsedFrames = 0
 	g.fadeCountdown = 0

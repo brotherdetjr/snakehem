@@ -2,21 +2,22 @@ package game
 
 import (
 	"fmt"
+	"image/color"
+	"math"
+	"slices"
+	consts "snakehem/consts"
+	"snakehem/graphics/pxterm16"
+	"snakehem/graphics/pxterm24"
+	. "snakehem/model/apple"
+	"snakehem/model/direction"
+	. "snakehem/model/snake"
+	. "snakehem/model/state"
+	"time"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/pbnjay/pixfont"
 	"golang.org/x/image/colornames"
-	"image/color"
-	"math"
-	"slices"
-	. "snakehem/apple"
-	consts "snakehem/consts"
-	"snakehem/direction"
-	"snakehem/pxterm16"
-	"snakehem/pxterm24"
-	. "snakehem/snake"
-	. "snakehem/state"
-	"time"
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -330,7 +331,7 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 		// Kage uniforms here
 	}
 	img := ebiten.NewImage(w, h)
-	img.DrawRectShader(w, h, shader, opts)
+	img.DrawRectShader(w, h, g.shader, opts)
 	screen.DrawImage(img, nil)
 }
 

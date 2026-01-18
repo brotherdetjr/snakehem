@@ -1,5 +1,5 @@
-//   
-//   
+//
+//
 //                                       XXXX                                                                  XXXX           XXXXXXXX
 //                                       XXXX                                                                  XXXX           XXXXXXXX
 //   XXXXXXXXXX       XXXX    XXXX     XXXXXXXXXX         XXXXXXXX       XXXX  XXXX       XXXXXXXXXXXX       XXXXXX         XXXX
@@ -27,4 +27,3 @@ func init() {
 	Font = pixfont.NewPixFont(16, 16, charMap, data)
 	Font.SetVariableWidth(false)
 }
-

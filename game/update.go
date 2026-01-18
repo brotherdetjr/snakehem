@@ -1,21 +1,22 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand/v2"
 	"os"
 	"slices"
-	. "snakehem/apple"
 	"snakehem/consts"
-	"snakehem/controllers"
-	"snakehem/controllers/keyboard"
-	. "snakehem/direction"
-	. "snakehem/snake"
-	. "snakehem/state"
+	"snakehem/input"
+	"snakehem/input/keyboard"
+	. "snakehem/model/apple"
+	. "snakehem/model/direction"
+	. "snakehem/model/snake"
+	. "snakehem/model/state"
 	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/rs/zerolog/log"
 )
 
 func (g *Game) Update() error {
@@ -167,7 +168,7 @@ func (g *Game) updateHeadCount() {
 	for _, snake := range g.snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
-	g.controllers = controllers.Controllers()
+	g.controllers = input.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
 			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })

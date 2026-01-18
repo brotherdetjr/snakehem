@@ -1,23 +1,20 @@
 package game
 
 import (
-	_ "embed"
 	"fmt"
 	"math"
 	"snakehem/consts"
-	"snakehem/controllers/controller"
-	"snakehem/pxterm24"
-	. "snakehem/snake"
-	. "snakehem/state"
+	"snakehem/graphics/pxterm24"
+	"snakehem/graphics/shader"
+	"snakehem/input/controller"
+	. "snakehem/model/snake"
+	. "snakehem/model/state"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
 	"github.com/rs/zerolog/log"
 )
 
-//go:embed crt_shader.kage
-var shaderCode []byte
-var shader = newShader()
 var scoreFmt = "%0" + fmt.Sprint(int(math.Log10(consts.TargetScore))+1) + "d"
 var pxterm16Height = pxterm24.Font.GetHeight()
 var pxterm24Height = pxterm24.Font.GetHeight()
@@ -31,6 +28,7 @@ type Game struct {
 	elapsedFrames uint64
 	fadeCountdown int
 	applePresent  bool
+	shader        *ebiten.Shader
 }
 
 func Run() {
@@ -50,6 +48,7 @@ func Run() {
 		elapsedFrames: 0,
 		fadeCountdown: 0,
 		applePresent:  false,
+		shader:        shader.NewShader(),
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()
@@ -58,12 +57,4 @@ func Run() {
 
 func (g *Game) Layout(_, _ int) (screenWidth, screenHeight int) {
 	return consts.GridDimPx, consts.GridDimPx
-}
-
-func newShader() *ebiten.Shader {
-	s, err := ebiten.NewShader(shaderCode)
-	if err != nil {
-		log.Fatal().Err(err).Send()
-	}
-	return s
 }

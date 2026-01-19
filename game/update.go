@@ -83,7 +83,7 @@ func (g *Game) Update() error {
 				nX, nY = newHeadCoords(snake, direction)
 			}
 			if g.elapsedFrames%model.TpsMultiplier == 0 {
-				if g.grid[nY][nX] == nil {
+				if g.perception.Grid[nY][nX] == nil {
 					tail := snake.Links[len(snake.Links)-1]
 					oldTailX := tail.X
 					oldTailY := tail.Y
@@ -104,13 +104,13 @@ func (g *Game) Update() error {
 							Redness:       0,
 						})
 					} else {
-						g.grid[oldTailY][oldTailX] = nil
+						g.perception.Grid[oldTailY][oldTailX] = nil
 					}
 					for _, link := range snake.Links {
-						g.grid[link.Y][link.X] = link
+						g.perception.Grid[link.Y][link.X] = link
 					}
 				} else if g.fadeCountdown == 0 {
-					switch item := g.grid[nY][nX].(type) {
+					switch item := g.perception.Grid[nY][nX].(type) {
 					case *Link:
 						idx := slices.Index(item.Snake.Links, item)
 						if idx > 0 {
@@ -118,7 +118,7 @@ func (g *Game) Update() error {
 						}
 					case *Apple:
 						g.incScore(snake, model.AppleScore)
-						g.grid[nY][nX] = nil
+						g.perception.Grid[nY][nX] = nil
 						g.applePresent = false
 					}
 				}
@@ -132,6 +132,7 @@ func (g *Game) Update() error {
 	case Scoreboard:
 		g.updateScoreboard()
 	}
+	g.perception.Countdown = int(math.Ceil(float64(g.countdown)/model.Tps)) - 1
 	return nil
 }
 
@@ -149,7 +150,7 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
-			g.grid[link.Y][link.X] = nil
+			g.perception.Grid[link.Y][link.X] = nil
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
@@ -177,7 +178,7 @@ func (g *Game) updateHeadCount() {
 				if len(g.snakes) < model.MaxSnakes {
 					for _, snake := range g.snakes {
 						head := snake.Links[0]
-						g.grid[head.Y][head.X] = nil
+						g.perception.Grid[head.Y][head.X] = nil
 					}
 					g.snakes = append(g.snakes, NewSnake(c, graphics.SnakeColours[len(g.snakes)]))
 					g.layoutSnakes()
@@ -217,7 +218,7 @@ func (g *Game) layoutSnakes() {
 		head := s.Links[0]
 		head.X = x
 		head.Y = y
-		g.grid[y][x] = head
+		g.perception.Grid[y][x] = head
 		alpha += delta
 		s.PickInitialDirection()
 	}
@@ -238,7 +239,7 @@ func (g *Game) randomUnoccupiedCell() (int, int) {
 	y := rand.IntN(model.GridSize)
 	for ; y < model.GridSize; y++ {
 		for ; x < model.GridSize; x++ {
-			if g.grid[y][x] == nil {
+			if g.perception.Grid[y][x] == nil {
 				return x, y
 			}
 		}
@@ -250,13 +251,13 @@ func (g *Game) randomUnoccupiedCell() (int, int) {
 func (g *Game) tryToPutAnotherApple() {
 	x, y := g.randomUnoccupiedCell()
 	if x != -1 && y != -1 {
-		g.grid[y][x] = &Apple{X: x, Y: y}
+		g.perception.Grid[y][x] = &Apple{X: x, Y: y}
 		g.applePresent = true
 	}
 }
 
 func (g *Game) restartPreservingSnakes() {
-	g.grid = [model.GridSize][model.GridSize]any{}
+	g.perception.Grid = [model.GridSize][model.GridSize]any{}
 	g.stage = Lobby
 	g.countdown = model.Tps * model.CountdownSeconds
 	g.elapsedFrames = 0

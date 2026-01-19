@@ -8,6 +8,7 @@ import (
 	"snakehem/graphics/shader"
 	"snakehem/input/controller"
 	"snakehem/model"
+	"snakehem/model/perception"
 	. "snakehem/model/snake"
 	. "snakehem/model/stage"
 
@@ -21,7 +22,7 @@ var pxterm16Height = pxterm24.Font.GetHeight()
 var pxterm24Height = pxterm24.Font.GetHeight()
 
 type Game struct {
-	grid          [model.GridSize][model.GridSize]any
+	perception    perception.Perception
 	snakes        []*Snake
 	controllers   []controller.Controller
 	stage         Stage
@@ -41,7 +42,7 @@ func Run() {
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		grid:          [model.GridSize][model.GridSize]any{},
+		perception:    perception.NewPerception(),
 		snakes:        nil,
 		controllers:   nil,
 		stage:         Lobby,

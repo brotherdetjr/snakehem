@@ -3,12 +3,11 @@ package game
 import (
 	"fmt"
 	"image/color"
-	"math"
 	"slices"
 	"snakehem/graphics"
 	"snakehem/graphics/pxterm16"
 	"snakehem/graphics/pxterm24"
-	consts "snakehem/model"
+	"snakehem/model"
 	. "snakehem/model/apple"
 	"snakehem/model/direction"
 	. "snakehem/model/snake"
@@ -51,7 +50,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				graphics.GridDimPx/2.5,
 				pxterm16.Font,
 			)
-			if snakeCount < consts.MaxSnakes {
+			if snakeCount < model.MaxSnakes {
 				drawTextCentered(
 					screen,
 					"OR ANY OTHER BUTTON TO JOIN",
@@ -73,7 +72,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((consts.GridFadeCountdown - g.fadeCountdown) * 200 / consts.GridFadeCountdown),
+					A: uint8((model.GridFadeCountdown - g.fadeCountdown) * 200 / model.GridFadeCountdown),
 				},
 				false,
 			)
@@ -146,8 +145,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 	for i, snake := range snakes {
 		top := pxterm24Height * 2 * (i + 3)
 		score := snake.Score
-		if score > consts.TargetScore {
-			score = consts.TargetScore
+		if score > model.TargetScore {
+			score = model.TargetScore
 		}
 		drawTextCentered(
 			screen,
@@ -160,7 +159,7 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 }
 
 func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
-	t := time.UnixMilli(int64(float32(g.elapsedFrames) / consts.Tps * 1000))
+	t := time.UnixMilli(int64(float32(g.elapsedFrames) / model.Tps * 1000))
 	drawTextCentered(
 		screen,
 		t.Format("04:05.0"),
@@ -171,12 +170,11 @@ func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
 }
 
 func (g *Game) drawCountdown(screen *ebiten.Image) {
-	if g.countdown <= 0 {
+	if g.perception.Countdown <= 0 {
 		return
 	}
-	count := int(math.Ceil(float64(g.countdown)/consts.Tps)) - 1
 	var txt string
-	switch count {
+	switch g.perception.Countdown {
 	case 3:
 		txt = "THREE"
 	case 2:
@@ -189,10 +187,10 @@ func (g *Game) drawCountdown(screen *ebiten.Image) {
 		txt = "WAIT..."
 	}
 	drawTextCentered(screen, txt, color.White, graphics.GridDimPx/2.5, pxterm24.Font)
-	if count > 0 {
+	if g.perception.Countdown > 0 {
 		drawTextCentered(
 			screen,
-			fmt.Sprintf("TARGET SCORE: %d", consts.TargetScore),
+			fmt.Sprintf("TARGET SCORE: %d", model.TargetScore),
 			colornames.Yellow,
 			graphics.GridDimPx/2.5+float64(pxterm24Height*2),
 			pxterm24.Font,
@@ -206,23 +204,13 @@ func drawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top 
 }
 
 func (g *Game) drawItems(screen *ebiten.Image) {
-	for i := 0; i < consts.GridSize; i++ {
-		for j := 0; j < consts.GridSize; j++ {
-			if val := g.grid[i][j]; val != nil {
+	for i := 0; i < model.GridSize; i++ {
+		for j := 0; j < model.GridSize; j++ {
+			if val := g.perception.Grid[i][j]; val != nil {
 				switch item := val.(type) {
 				case *Link:
 					shrink := (1 - float32(item.HealthPercent)/100) * graphics.CellDimPx * 0.5
-					if item != item.Snake.Links[0] {
-						vector.DrawFilledRect(
-							screen,
-							float32(item.X*graphics.CellDimPx)+shrink,
-							float32(item.Y*graphics.CellDimPx)+shrink,
-							graphics.CellDimPx-shrink*2,
-							graphics.CellDimPx-shrink*2,
-							withRedness(item.Snake.Colour, item.Redness),
-							false,
-						)
-					} else if g.countdown > consts.Tps {
+					if item != item.Snake.Links[0] || g.perception.Countdown > 0 {
 						vector.DrawFilledRect(
 							screen,
 							float32(item.X*graphics.CellDimPx)+shrink,
@@ -315,7 +303,7 @@ func (g *Game) drawScores(screen *ebiten.Image) {
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.stage != Action || snake.Score+consts.ApproachingTargetScoreGap < consts.TargetScore || (g.elapsedFrames/(consts.Tps/4))%2 > 0 {
+		if g.stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.elapsedFrames/(model.Tps/4))%2 > 0 {
 			txt, colour := g.scoreStrAndColourForIthSnake(snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
@@ -338,12 +326,12 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 
 func (g *Game) scoreStrAndColourForIthSnake(snake *Snake) (string, color.Color) {
 	score := snake.Score
-	if score > consts.TargetScore {
-		score = consts.TargetScore
+	if score > model.TargetScore {
+		score = model.TargetScore
 	}
 	txt := fmt.Sprintf(scoreFmt, score)
 	var colour color.Color
-	if g.stage == Action && g.countdown <= consts.Tps {
+	if g.stage == Action && g.perception.Countdown < 1 {
 		colour = snake.Colour
 	} else {
 		colour = withRedness(snake.Colour, snake.Links[0].Redness)

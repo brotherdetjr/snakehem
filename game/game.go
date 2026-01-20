@@ -26,7 +26,6 @@ type Game struct {
 	snakeHeadsRednessGrowth float32
 	countdown               int
 	elapsedFrames           uint64
-	fadeCountdown           int
 	applePresent            bool
 	shader                  *ebiten.Shader
 }
@@ -46,7 +45,6 @@ func Run() {
 		snakeHeadsRednessGrowth: -1,
 		countdown:               model.Tps * model.CountdownSeconds,
 		elapsedFrames:           0,
-		fadeCountdown:           0,
 		applePresent:            false,
 		shader:                  shader.NewShader(),
 	}

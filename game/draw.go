@@ -61,7 +61,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	case Action:
-		if g.fadeCountdown > 0 {
+		if g.perception.FadeCountdown > 0 {
 			vector.DrawFilledRect(
 				screen,
 				0,
@@ -72,7 +72,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((model.GridFadeCountdown - g.fadeCountdown) * 200 / model.GridFadeCountdown),
+					A: uint8((model.GridFadeCountdown - g.perception.FadeCountdown) * 200 / model.GridFadeCountdown),
 				},
 				false,
 			)

@@ -8,12 +8,11 @@ import (
 )
 
 type Snake struct {
-	Id                int
-	Links             []*Link
-	Colour            color.Color
-	Direction         direction.Direction
-	Score             int
-	HeadRednessGrowth float32
+	Id        int
+	Links     []*Link
+	Colour    color.Color
+	Direction direction.Direction
+	Score     int
 }
 
 type Link struct {
@@ -26,11 +25,10 @@ type Link struct {
 
 func NewSnake(id int, colour color.Color) *Snake {
 	snake := &Snake{
-		Id:                id,
-		Links:             make([]*Link, 1),
-		Colour:            colour,
-		Score:             0,
-		HeadRednessGrowth: -1,
+		Id:     id,
+		Links:  make([]*Link, 1),
+		Colour: colour,
+		Score:  0,
 	}
 	snake.Links[0] = &Link{
 		HealthPercent: 100,

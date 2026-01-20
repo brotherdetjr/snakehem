@@ -10,7 +10,6 @@ import (
 	"snakehem/model"
 	"snakehem/model/perception"
 	. "snakehem/model/snake"
-	. "snakehem/model/stage"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
@@ -25,7 +24,6 @@ type Game struct {
 	perception    perception.Perception
 	snakes        []*Snake
 	controllers   []controller.Controller
-	stage         Stage
 	countdown     int
 	elapsedFrames uint64
 	fadeCountdown int
@@ -45,7 +43,6 @@ func Run() {
 		perception:    perception.NewPerception(),
 		snakes:        nil,
 		controllers:   nil,
-		stage:         Lobby,
 		countdown:     model.Tps * model.CountdownSeconds,
 		elapsedFrames: 0,
 		fadeCountdown: 0,

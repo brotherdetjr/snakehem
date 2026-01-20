@@ -23,7 +23,7 @@ import (
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	g.drawItems(screen)
-	switch g.stage {
+	switch g.perception.Stage {
 	case Lobby:
 		g.drawScores(screen)
 		snakeCount := len(g.snakes)
@@ -303,7 +303,7 @@ func (g *Game) drawScores(screen *ebiten.Image) {
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.elapsedFrames/(model.Tps/4))%2 > 0 {
+		if g.perception.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.elapsedFrames/(model.Tps/4))%2 > 0 {
 			txt, colour := g.scoreStrAndColourForIthSnake(snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
@@ -331,7 +331,7 @@ func (g *Game) scoreStrAndColourForIthSnake(snake *Snake) (string, color.Color) 
 	}
 	txt := fmt.Sprintf(scoreFmt, score)
 	var colour color.Color
-	if g.stage == Action && g.perception.Countdown < 1 {
+	if g.perception.Stage == Action && g.perception.Countdown < 1 {
 		colour = snake.Colour
 	} else {
 		colour = withRedness(snake.Colour, snake.Links[0].Redness)

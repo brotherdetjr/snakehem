@@ -24,7 +24,7 @@ func (g *Game) Update() error {
 	if keyboard.Instance.IsExitJustPressed() {
 		os.Exit(0)
 	}
-	switch g.stage {
+	switch g.perception.Stage {
 	case Lobby:
 		g.updateHeadCount()
 	case Action:
@@ -34,7 +34,7 @@ func (g *Game) Update() error {
 		if g.fadeCountdown > 0 {
 			g.fadeCountdown--
 			if g.fadeCountdown == 0 {
-				g.stage = Scoreboard
+				g.perception.Stage = Scoreboard
 				break
 			}
 		}
@@ -186,7 +186,7 @@ func (g *Game) updateHeadCount() {
 			} else {
 				g.snakes[snakeIdx].Links[0].Redness = 1
 				if c.IsStartJustPressed() && len(g.snakes) > 1 {
-					g.stage = Action
+					g.perception.Stage = Action
 				}
 			}
 		}
@@ -258,7 +258,7 @@ func (g *Game) tryToPutAnotherApple() {
 
 func (g *Game) restartPreservingSnakes() {
 	g.perception.Grid = [model.GridSize][model.GridSize]any{}
-	g.stage = Lobby
+	g.perception.Stage = Lobby
 	g.countdown = model.Tps * model.CountdownSeconds
 	g.elapsedFrames = 0
 	g.fadeCountdown = 0

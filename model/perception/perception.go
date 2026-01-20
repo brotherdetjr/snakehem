@@ -1,14 +1,19 @@
 package perception
 
-import "snakehem/model"
+import (
+	"snakehem/model"
+	"snakehem/model/stage"
+)
 
 type Perception struct {
+	Stage     stage.Stage
 	Grid      [model.GridSize][model.GridSize]any
 	Countdown int
 }
 
 func NewPerception() Perception {
 	return Perception{
+		Stage:     stage.Lobby,
 		Grid:      [model.GridSize][model.GridSize]any{},
 		Countdown: 3,
 	}

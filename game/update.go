@@ -41,9 +41,9 @@ func (g *Game) Update() error {
 		for _, snake := range g.snakes {
 			head := snake.Links[0]
 			if g.countdown <= model.Tps {
-				head.ChangeRedness(0.2 * snake.HeadRednessGrowth)
+				head.ChangeRedness(0.2 * g.snakeHeadsRednessGrowth)
 				if head.Redness >= 1 || head.Redness <= 0 {
-					snake.HeadRednessGrowth = -snake.HeadRednessGrowth
+					g.snakeHeadsRednessGrowth *= -1
 				}
 			} else if g.snakeControllers[snake.Id].IsAnyJustPressed() && g.fadeCountdown == 0 {
 				head.Redness = 1
@@ -266,11 +266,11 @@ func (g *Game) restartPreservingSnakes() {
 	g.elapsedFrames = 0
 	g.fadeCountdown = 0
 	g.applePresent = false
+	g.snakeHeadsRednessGrowth = -1
 	g.layoutSnakes()
 	for _, snake := range g.snakes {
 		snake.Score = 0
 		snake.Links = snake.Links[0:1]
-		snake.HeadRednessGrowth = -1
 	}
 }
 

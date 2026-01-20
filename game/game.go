@@ -9,7 +9,6 @@ import (
 	"snakehem/input/controller"
 	"snakehem/model"
 	"snakehem/model/perception"
-	. "snakehem/model/snake"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
@@ -22,7 +21,6 @@ var pxterm24Height = pxterm24.Font.GetHeight()
 
 type Game struct {
 	perception              perception.Perception
-	snakes                  []*Snake
 	controllers             []controller.Controller
 	snakeControllers        []controller.Controller
 	snakeHeadsRednessGrowth float32
@@ -43,7 +41,6 @@ func Run() {
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
 		perception:              perception.NewPerception(),
-		snakes:                  nil,
 		controllers:             nil,
 		snakeControllers:        nil,
 		snakeHeadsRednessGrowth: -1,

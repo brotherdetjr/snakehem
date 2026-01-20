@@ -38,7 +38,7 @@ func (g *Game) Update() error {
 				break
 			}
 		}
-		for _, snake := range g.snakes {
+		for _, snake := range g.perception.Snakes {
 			head := snake.Links[0]
 			if g.countdown <= model.Tps {
 				head.ChangeRedness(0.2 * g.snakeHeadsRednessGrowth)
@@ -59,7 +59,7 @@ func (g *Game) Update() error {
 		if g.countdown > model.Tps {
 			break
 		}
-		for _, snake := range g.snakes {
+		for _, snake := range g.perception.Snakes {
 			direction := snake.Direction
 			controller := g.snakeControllers[snake.Id]
 			if g.fadeCountdown == 0 {
@@ -113,7 +113,7 @@ func (g *Game) Update() error {
 				} else if g.fadeCountdown == 0 {
 					switch item := g.perception.Grid[nY][nX].(type) {
 					case *Link:
-						idx := slices.Index(g.snakes[item.SnakeId].Links, item)
+						idx := slices.Index(g.perception.Snakes[item.SnakeId].Links, item)
 						if idx > 0 {
 							g.biteSnake(item, snake, idx)
 						}
@@ -138,7 +138,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
-	targetSnake := g.snakes[bittenLink.SnakeId]
+	targetSnake := g.perception.Snakes[bittenLink.SnakeId]
 	bittenLink.HealthPercent -= model.HealthReductionPerBite
 	bittenLink.Redness = 1
 	g.snakeControllers[targetSnake.Id].Vibrate(200 * time.Millisecond)
@@ -168,26 +168,28 @@ func (g *Game) incScore(snake *Snake, delta int) {
 }
 
 func (g *Game) updateHeadCount() {
-	for _, snake := range g.snakes {
+	for _, snake := range g.perception.Snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
 	g.controllers = input.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
-			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return g.snakeControllers[snake.Id].Equals(c) })
+			snakes := g.perception.Snakes
+			snakeCount := len(snakes)
+			snakeIdx := slices.IndexFunc(snakes, func(snake *Snake) bool { return g.snakeControllers[snake.Id].Equals(c) })
 			if snakeIdx == -1 {
-				if len(g.snakes) < model.MaxSnakes {
-					for _, snake := range g.snakes {
+				if snakeCount < model.MaxSnakes {
+					for _, snake := range snakes {
 						head := snake.Links[0]
 						g.perception.Grid[head.Y][head.X] = nil
 					}
-					g.snakes = append(g.snakes, NewSnake(len(g.snakes), graphics.SnakeColours[len(g.snakes)]))
+					g.perception.Snakes = append(g.perception.Snakes, NewSnake(snakeCount, graphics.SnakeColours[snakeCount]))
 					g.snakeControllers = append(g.snakeControllers, c)
 					g.layoutSnakes()
 				}
 			} else {
-				g.snakes[snakeIdx].Links[0].Redness = 1
-				if c.IsStartJustPressed() && len(g.snakes) > 1 {
+				snakes[snakeIdx].Links[0].Redness = 1
+				if c.IsStartJustPressed() && snakeCount > 1 {
 					g.perception.Stage = Action
 				}
 			}
@@ -196,7 +198,7 @@ func (g *Game) updateHeadCount() {
 }
 
 func (g *Game) updateScoreboard() {
-	for _, snake := range g.snakes {
+	for _, snake := range g.perception.Snakes {
 		controller := g.snakeControllers[snake.Id]
 		if controller.IsStartJustPressed() {
 			g.restartPreservingSnakes()
@@ -213,9 +215,9 @@ func (g *Game) updateScoreboard() {
 }
 
 func (g *Game) layoutSnakes() {
-	delta := 2 * math.Pi / float64(len(g.snakes))
+	delta := 2 * math.Pi / float64(len(g.perception.Snakes))
 	alpha := float64(0)
-	for _, s := range g.snakes {
+	for _, s := range g.perception.Snakes {
 		y := model.GridSize/2 - int(math.Cos(alpha)*model.GridSize/3)
 		x := model.GridSize/2 + int(math.Sin(alpha)*model.GridSize/3)
 		head := s.Links[0]
@@ -268,7 +270,7 @@ func (g *Game) restartPreservingSnakes() {
 	g.applePresent = false
 	g.snakeHeadsRednessGrowth = -1
 	g.layoutSnakes()
-	for _, snake := range g.snakes {
+	for _, snake := range g.perception.Snakes {
 		snake.Score = 0
 		snake.Links = snake.Links[0:1]
 	}

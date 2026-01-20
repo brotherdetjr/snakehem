@@ -22,8 +22,12 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	drawPerception(&g.perception, screen)
-	g.applyShader(screen)
+	if g.perception.ElapsedFrames%model.TpsMultiplier == 0 { // TODO proper condition: if perception changed
+		g.frame.Clear()
+		drawPerception(&g.perception, g.frame)
+		g.applyShader(g.frame)
+	}
+	screen.DrawImage(g.frame, nil)
 }
 
 func drawPerception(p *perception.Perception, screen *ebiten.Image) {

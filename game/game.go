@@ -27,6 +27,7 @@ type Game struct {
 	countdown               int
 	applePresent            bool
 	shader                  *ebiten.Shader
+	frame                   *ebiten.Image
 }
 
 func Run() {
@@ -45,6 +46,7 @@ func Run() {
 		countdown:               model.Tps * model.CountdownSeconds,
 		applePresent:            false,
 		shader:                  shader.NewShader(),
+		frame:                   ebiten.NewImage(graphics.GridDimPx, graphics.GridDimPx),
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

@@ -31,9 +31,9 @@ func (g *Game) Update() error {
 		if g.countdown > 0 {
 			g.countdown--
 		}
-		if g.fadeCountdown > 0 {
-			g.fadeCountdown--
-			if g.fadeCountdown == 0 {
+		if g.perception.FadeCountdown > 0 {
+			g.perception.FadeCountdown--
+			if g.perception.FadeCountdown == 0 {
 				g.perception.Stage = Scoreboard
 				break
 			}
@@ -45,7 +45,7 @@ func (g *Game) Update() error {
 				if head.Redness >= 1 || head.Redness <= 0 {
 					g.snakeHeadsRednessGrowth *= -1
 				}
-			} else if g.snakeControllers[snake.Id].IsAnyJustPressed() && g.fadeCountdown == 0 {
+			} else if g.snakeControllers[snake.Id].IsAnyJustPressed() && g.perception.FadeCountdown == 0 {
 				head.Redness = 1
 			} else {
 				head.ChangeRedness(-0.1)
@@ -62,7 +62,7 @@ func (g *Game) Update() error {
 		for _, snake := range g.perception.Snakes {
 			direction := snake.Direction
 			controller := g.snakeControllers[snake.Id]
-			if g.fadeCountdown == 0 {
+			if g.perception.FadeCountdown == 0 {
 				if controller.IsUpJustPressed() {
 					direction = Up
 					log.Info().Any("snakeId", controller).Str("direction", "Up").Msg("New direction")
@@ -110,7 +110,7 @@ func (g *Game) Update() error {
 					for _, link := range snake.Links {
 						g.perception.Grid[link.Y][link.X] = link
 					}
-				} else if g.fadeCountdown == 0 {
+				} else if g.perception.FadeCountdown == 0 {
 					switch item := g.perception.Grid[nY][nX].(type) {
 					case *Link:
 						idx := slices.Index(g.perception.Snakes[item.SnakeId].Links, item)
@@ -156,14 +156,14 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
 	if bitingSnake.Score >= model.TargetScore {
-		g.fadeCountdown = model.GridFadeCountdown
+		g.perception.FadeCountdown = model.GridFadeCountdown
 	}
 }
 
 func (g *Game) incScore(snake *Snake, delta int) {
 	snake.Score += delta
 	if snake.Score >= model.TargetScore {
-		g.fadeCountdown = model.GridFadeCountdown
+		g.perception.FadeCountdown = model.GridFadeCountdown
 	}
 }
 
@@ -264,9 +264,9 @@ func (g *Game) tryToPutAnotherApple() {
 func (g *Game) restartPreservingSnakes() {
 	g.perception.Grid = [model.GridSize][model.GridSize]any{}
 	g.perception.Stage = Lobby
+	g.perception.FadeCountdown = 0
 	g.countdown = model.Tps * model.CountdownSeconds
 	g.elapsedFrames = 0
-	g.fadeCountdown = 0
 	g.applePresent = false
 	g.snakeHeadsRednessGrowth = -1
 	g.layoutSnakes()

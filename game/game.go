@@ -21,14 +21,15 @@ var pxterm16Height = pxterm24.Font.GetHeight()
 var pxterm24Height = pxterm24.Font.GetHeight()
 
 type Game struct {
-	perception    perception.Perception
-	snakes        []*Snake
-	controllers   []controller.Controller
-	countdown     int
-	elapsedFrames uint64
-	fadeCountdown int
-	applePresent  bool
-	shader        *ebiten.Shader
+	perception       perception.Perception
+	snakes           []*Snake
+	controllers      []controller.Controller
+	snakeControllers []controller.Controller
+	countdown        int
+	elapsedFrames    uint64
+	fadeCountdown    int
+	applePresent     bool
+	shader           *ebiten.Shader
 }
 
 func Run() {
@@ -40,14 +41,15 @@ func Run() {
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		perception:    perception.NewPerception(),
-		snakes:        nil,
-		controllers:   nil,
-		countdown:     model.Tps * model.CountdownSeconds,
-		elapsedFrames: 0,
-		fadeCountdown: 0,
-		applePresent:  false,
-		shader:        shader.NewShader(),
+		perception:       perception.NewPerception(),
+		snakes:           nil,
+		controllers:      nil,
+		snakeControllers: nil,
+		countdown:        model.Tps * model.CountdownSeconds,
+		elapsedFrames:    0,
+		fadeCountdown:    0,
+		applePresent:     false,
+		shader:           shader.NewShader(),
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

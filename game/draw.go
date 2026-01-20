@@ -209,20 +209,21 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 			if val := g.perception.Grid[i][j]; val != nil {
 				switch item := val.(type) {
 				case *Link:
+					snake := g.snakes[item.SnakeId]
 					shrink := (1 - float32(item.HealthPercent)/100) * graphics.CellDimPx * 0.5
-					if item != item.Snake.Links[0] || g.perception.Countdown > 0 {
+					if item != snake.Links[0] || g.perception.Countdown > 0 {
 						vector.DrawFilledRect(
 							screen,
 							float32(item.X*graphics.CellDimPx)+shrink,
 							float32(item.Y*graphics.CellDimPx)+shrink,
 							graphics.CellDimPx-shrink*2,
 							graphics.CellDimPx-shrink*2,
-							withRedness(item.Snake.Colour, item.Redness),
+							withRedness(snake.Colour, item.Redness),
 							false,
 						)
 					} else {
 						var x1, y1, x2, y2 float32
-						switch item.Snake.Direction {
+						switch snake.Direction {
 						case direction.Up:
 							x1 = float32(item.X*graphics.CellDimPx) + graphics.EyeGapPx
 							y1 = float32(item.Y*graphics.CellDimPx) + graphics.EyeGapPx
@@ -251,7 +252,7 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 								x1,
 								y1,
 								graphics.EyeRadiusPx,
-								withRedness(item.Snake.Colour, item.Redness),
+								withRedness(snake.Colour, item.Redness),
 								false,
 							)
 							vector.DrawFilledCircle(
@@ -259,7 +260,7 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 								x2,
 								y2,
 								graphics.EyeRadiusPx,
-								withRedness(item.Snake.Colour, item.Redness),
+								withRedness(snake.Colour, item.Redness),
 								false,
 							)
 						} else {
@@ -269,7 +270,7 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 								float32(item.Y*graphics.CellDimPx),
 								graphics.CellDimPx,
 								graphics.CellDimPx,
-								withRedness(item.Snake.Colour, item.Redness),
+								withRedness(snake.Colour, item.Redness),
 								false,
 							)
 						}

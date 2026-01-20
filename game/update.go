@@ -45,7 +45,7 @@ func (g *Game) Update() error {
 				if head.Redness >= 1 || head.Redness <= 0 {
 					snake.HeadRednessGrowth = -snake.HeadRednessGrowth
 				}
-			} else if snake.Controller.IsAnyJustPressed() && g.fadeCountdown == 0 {
+			} else if g.snakeControllers[snake.Id].IsAnyJustPressed() && g.fadeCountdown == 0 {
 				head.Redness = 1
 			} else {
 				head.ChangeRedness(-0.1)
@@ -61,19 +61,20 @@ func (g *Game) Update() error {
 		}
 		for _, snake := range g.snakes {
 			direction := snake.Direction
+			controller := g.snakeControllers[snake.Id]
 			if g.fadeCountdown == 0 {
-				if snake.Controller.IsUpJustPressed() {
+				if controller.IsUpJustPressed() {
 					direction = Up
-					log.Info().Any("snakeId", snake.Controller).Str("direction", "Up").Msg("New direction")
-				} else if snake.Controller.IsDownJustPressed() {
+					log.Info().Any("snakeId", controller).Str("direction", "Up").Msg("New direction")
+				} else if controller.IsDownJustPressed() {
 					direction = Down
-					log.Info().Any("snakeId", snake.Controller).Str("direction", "Down").Msg("New direction")
-				} else if snake.Controller.IsLeftJustPressed() {
+					log.Info().Any("snakeId", controller).Str("direction", "Down").Msg("New direction")
+				} else if controller.IsLeftJustPressed() {
 					direction = Left
-					log.Info().Any("snakeId", snake.Controller).Str("direction", "Left").Msg("New direction")
-				} else if snake.Controller.IsRightJustPressed() {
+					log.Info().Any("snakeId", controller).Str("direction", "Left").Msg("New direction")
+				} else if controller.IsRightJustPressed() {
 					direction = Right
-					log.Info().Any("snakeId", snake.Controller).Str("direction", "Right").Msg("New direction")
+					log.Info().Any("snakeId", controller).Str("direction", "Right").Msg("New direction")
 				}
 			}
 			nX, nY := newHeadCoords(snake, direction)
@@ -98,7 +99,7 @@ func (g *Game) Update() error {
 					if len(snake.Links) < model.SnakeTargetLength {
 						snake.Links = append(snake.Links, &Link{
 							HealthPercent: 100,
-							Snake:         snake,
+							SnakeId:       snake.Id,
 							X:             oldTailX,
 							Y:             oldTailY,
 							Redness:       0,
@@ -112,7 +113,7 @@ func (g *Game) Update() error {
 				} else if g.fadeCountdown == 0 {
 					switch item := g.perception.Grid[nY][nX].(type) {
 					case *Link:
-						idx := slices.Index(item.Snake.Links, item)
+						idx := slices.Index(g.snakes[item.SnakeId].Links, item)
 						if idx > 0 {
 							g.biteSnake(item, snake, idx)
 						}
@@ -137,10 +138,10 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
-	targetSnake := bittenLink.Snake
+	targetSnake := g.snakes[bittenLink.SnakeId]
 	bittenLink.HealthPercent -= model.HealthReductionPerBite
 	bittenLink.Redness = 1
-	targetSnake.Controller.Vibrate(200 * time.Millisecond)
+	g.snakeControllers[targetSnake.Id].Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
 		g.incScore(bitingSnake, model.BitLinkScore)
 	}
@@ -173,14 +174,15 @@ func (g *Game) updateHeadCount() {
 	g.controllers = input.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
-			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return snake.Controller.Equals(c) })
+			snakeIdx := slices.IndexFunc(g.snakes, func(snake *Snake) bool { return g.snakeControllers[snake.Id].Equals(c) })
 			if snakeIdx == -1 {
 				if len(g.snakes) < model.MaxSnakes {
 					for _, snake := range g.snakes {
 						head := snake.Links[0]
 						g.perception.Grid[head.Y][head.X] = nil
 					}
-					g.snakes = append(g.snakes, NewSnake(c, graphics.SnakeColours[len(g.snakes)]))
+					g.snakes = append(g.snakes, NewSnake(len(g.snakes), graphics.SnakeColours[len(g.snakes)]))
+					g.snakeControllers = append(g.snakeControllers, c)
 					g.layoutSnakes()
 				}
 			} else {
@@ -195,15 +197,16 @@ func (g *Game) updateHeadCount() {
 
 func (g *Game) updateScoreboard() {
 	for _, snake := range g.snakes {
-		if snake.Controller.IsStartJustPressed() {
+		controller := g.snakeControllers[snake.Id]
+		if controller.IsStartJustPressed() {
 			g.restartPreservingSnakes()
-		} else if snake.Controller.IsExitJustPressed() {
+		} else if controller.IsExitJustPressed() {
 			os.Exit(0)
 		}
 		for _, link := range snake.Links {
 			link.ChangeRedness(-0.1)
 		}
-		if snake.Controller.IsAnyJustPressed() {
+		if controller.IsAnyJustPressed() {
 			snake.Links[0].Redness = 1
 		}
 	}

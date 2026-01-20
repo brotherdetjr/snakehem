@@ -83,7 +83,7 @@ func (g *Game) Update() error {
 				direction = snake.Direction
 				nX, nY = newHeadCoords(snake, direction)
 			}
-			if g.elapsedFrames%model.TpsMultiplier == 0 {
+			if g.perception.ElapsedFrames%model.TpsMultiplier == 0 {
 				if g.perception.Grid[nY][nX] == nil {
 					tail := snake.Links[len(snake.Links)-1]
 					oldTailX := tail.X
@@ -129,7 +129,7 @@ func (g *Game) Update() error {
 		if !g.applePresent && rand.IntN(model.NewAppleProbabilityParam) == 0 {
 			g.tryToPutAnotherApple()
 		}
-		g.elapsedFrames++
+		g.perception.ElapsedFrames++
 	case Scoreboard:
 		g.updateScoreboard()
 	}
@@ -265,8 +265,8 @@ func (g *Game) restartPreservingSnakes() {
 	g.perception.Grid = [model.GridSize][model.GridSize]any{}
 	g.perception.Stage = Lobby
 	g.perception.FadeCountdown = 0
+	g.perception.ElapsedFrames = 0
 	g.countdown = model.Tps * model.CountdownSeconds
-	g.elapsedFrames = 0
 	g.applePresent = false
 	g.snakeHeadsRednessGrowth = -1
 	g.layoutSnakes()

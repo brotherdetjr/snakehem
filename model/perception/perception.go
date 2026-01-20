@@ -12,6 +12,7 @@ type Perception struct {
 	Snakes        []*snake.Snake
 	Countdown     int
 	FadeCountdown int
+	ElapsedFrames uint64
 }
 
 func NewPerception() Perception {
@@ -20,5 +21,6 @@ func NewPerception() Perception {
 		Grid:          [model.GridSize][model.GridSize]any{},
 		Countdown:     3,
 		FadeCountdown: 0,
+		ElapsedFrames: 0,
 	}
 }

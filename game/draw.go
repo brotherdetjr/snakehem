@@ -159,7 +159,7 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 }
 
 func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
-	t := time.UnixMilli(int64(float32(g.elapsedFrames) / model.Tps * 1000))
+	t := time.UnixMilli(int64(float32(g.perception.ElapsedFrames) / model.Tps * 1000))
 	drawTextCentered(
 		screen,
 		t.Format("04:05.0"),
@@ -305,7 +305,7 @@ func (g *Game) drawScores(screen *ebiten.Image) {
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.perception.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.elapsedFrames/(model.Tps/4))%2 > 0 {
+		if g.perception.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.perception.ElapsedFrames/(model.Tps/4))%2 > 0 {
 			txt, colour := g.scoreStrAndColourForIthSnake(snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)

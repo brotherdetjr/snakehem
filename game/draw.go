@@ -26,7 +26,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.perception.Stage {
 	case Lobby:
 		g.drawScores(screen)
-		snakeCount := len(g.snakes)
+		snakeCount := len(g.perception.Snakes)
 		if snakeCount < 2 {
 			drawTextCentered(
 				screen,
@@ -137,8 +137,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 		float64(pxterm24Height*2+pxterm16Height*2),
 		pxterm16.Font,
 	)
-	snakes := make([]*Snake, len(g.snakes))
-	copy(snakes, g.snakes)
+	snakes := make([]*Snake, len(g.perception.Snakes))
+	copy(snakes, g.perception.Snakes)
 	slices.SortFunc(snakes, func(a, b *Snake) int {
 		return b.Score - a.Score
 	})
@@ -209,7 +209,7 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 			if val := g.perception.Grid[i][j]; val != nil {
 				switch item := val.(type) {
 				case *Link:
-					snake := g.snakes[item.SnakeId]
+					snake := g.perception.Snakes[item.SnakeId]
 					shrink := (1 - float32(item.HealthPercent)/100) * graphics.CellDimPx * 0.5
 					if item != snake.Links[0] || g.perception.Countdown > 0 {
 						vector.DrawFilledRect(
@@ -292,13 +292,14 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 }
 
 func (g *Game) drawScores(screen *ebiten.Image) {
-	scoresAtTop := len(g.snakes)
+	snakes := g.perception.Snakes
+	scoresAtTop := len(snakes)
 	if scoresAtTop > graphics.MaxScoresAtTop {
 		scoresAtTop = graphics.MaxScoresAtTop
 	}
-	g.drawScoreRow(screen, g.snakes[:scoresAtTop], pxterm24Height/2)
+	g.drawScoreRow(screen, snakes[:scoresAtTop], pxterm24Height/2)
 	// when there are many players, not all scores can be fit in one line
-	g.drawScoreRow(screen, g.snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
+	g.drawScoreRow(screen, snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
 }
 
 func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {

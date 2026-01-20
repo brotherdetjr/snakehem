@@ -2,12 +2,14 @@ package perception
 
 import (
 	"snakehem/model"
+	"snakehem/model/snake"
 	"snakehem/model/stage"
 )
 
 type Perception struct {
 	Stage     stage.Stage
 	Grid      [model.GridSize][model.GridSize]any
+	Snakes    []*snake.Snake
 	Countdown int
 }
 

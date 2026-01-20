@@ -10,6 +10,7 @@ import (
 	"snakehem/model"
 	. "snakehem/model/apple"
 	"snakehem/model/direction"
+	"snakehem/model/perception"
 	. "snakehem/model/snake"
 	. "snakehem/model/stage"
 	"time"
@@ -21,12 +22,17 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	drawPerception(&g.perception, screen)
+	g.applyShader(screen)
+}
+
+func drawPerception(p *perception.Perception, screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
-	g.drawItems(screen)
-	switch g.perception.Stage {
+	drawItems(p, screen)
+	switch p.Stage {
 	case Lobby:
-		g.drawScores(screen)
-		snakeCount := len(g.perception.Snakes)
+		drawScores(p, screen)
+		snakeCount := len(p.Snakes)
 		if snakeCount < 2 {
 			drawTextCentered(
 				screen,
@@ -61,7 +67,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	case Action:
-		if g.perception.FadeCountdown > 0 {
+		if p.FadeCountdown > 0 {
 			vector.DrawFilledRect(
 				screen,
 				0,
@@ -72,22 +78,21 @@ func (g *Game) Draw(screen *ebiten.Image) {
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((model.GridFadeCountdown - g.perception.FadeCountdown) * 200 / model.GridFadeCountdown),
+					A: uint8((model.GridFadeCountdown - p.FadeCountdown) * 200 / model.GridFadeCountdown),
 				},
 				false,
 			)
 		}
-		g.drawScores(screen)
-		g.drawCountdown(screen)
-		g.drawTimeElapsed(screen)
+		drawScores(p, screen)
+		drawCountdown(p, screen)
+		drawTimeElapsed(p, screen)
 	case Scoreboard:
-		g.drawScoreboard(screen)
-		g.drawTimeElapsed(screen)
+		drawScoreboard(p, screen)
+		drawTimeElapsed(p, screen)
 	}
-	g.applyShader(screen)
 }
 
-func (g *Game) drawScoreboard(screen *ebiten.Image) {
+func drawScoreboard(p *perception.Perception, screen *ebiten.Image) {
 	vector.DrawFilledRect(
 		screen,
 		0,
@@ -137,8 +142,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 		float64(pxterm24Height*2+pxterm16Height*2),
 		pxterm16.Font,
 	)
-	snakes := make([]*Snake, len(g.perception.Snakes))
-	copy(snakes, g.perception.Snakes)
+	snakes := make([]*Snake, len(p.Snakes))
+	copy(snakes, p.Snakes)
 	slices.SortFunc(snakes, func(a, b *Snake) int {
 		return b.Score - a.Score
 	})
@@ -158,8 +163,8 @@ func (g *Game) drawScoreboard(screen *ebiten.Image) {
 	}
 }
 
-func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
-	t := time.UnixMilli(int64(float32(g.perception.ElapsedFrames) / model.Tps * 1000))
+func drawTimeElapsed(p *perception.Perception, screen *ebiten.Image) {
+	t := time.UnixMilli(int64(float32(p.ElapsedFrames) / model.Tps * 1000))
 	drawTextCentered(
 		screen,
 		t.Format("04:05.0"),
@@ -169,12 +174,12 @@ func (g *Game) drawTimeElapsed(screen *ebiten.Image) {
 	)
 }
 
-func (g *Game) drawCountdown(screen *ebiten.Image) {
-	if g.perception.Countdown <= 0 {
+func drawCountdown(p *perception.Perception, screen *ebiten.Image) {
+	if p.Countdown <= 0 {
 		return
 	}
 	var txt string
-	switch g.perception.Countdown {
+	switch p.Countdown {
 	case 3:
 		txt = "THREE"
 	case 2:
@@ -187,7 +192,7 @@ func (g *Game) drawCountdown(screen *ebiten.Image) {
 		txt = "WAIT..."
 	}
 	drawTextCentered(screen, txt, color.White, graphics.GridDimPx/2.5, pxterm24.Font)
-	if g.perception.Countdown > 0 {
+	if p.Countdown > 0 {
 		drawTextCentered(
 			screen,
 			fmt.Sprintf("TARGET SCORE: %d", model.TargetScore),
@@ -203,15 +208,15 @@ func drawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top 
 	font.DrawString(screen, (graphics.GridDimPx-txtWidth)/2, int(top), txt, colour)
 }
 
-func (g *Game) drawItems(screen *ebiten.Image) {
+func drawItems(p *perception.Perception, screen *ebiten.Image) {
 	for i := 0; i < model.GridSize; i++ {
 		for j := 0; j < model.GridSize; j++ {
-			if val := g.perception.Grid[i][j]; val != nil {
+			if val := p.Grid[i][j]; val != nil {
 				switch item := val.(type) {
 				case *Link:
-					snake := g.perception.Snakes[item.SnakeId]
+					snake := p.Snakes[item.SnakeId]
 					shrink := (1 - float32(item.HealthPercent)/100) * graphics.CellDimPx * 0.5
-					if item != snake.Links[0] || g.perception.Countdown > 0 {
+					if item != snake.Links[0] || p.Countdown > 0 {
 						vector.DrawFilledRect(
 							screen,
 							float32(item.X*graphics.CellDimPx)+shrink,
@@ -291,22 +296,22 @@ func (g *Game) drawItems(screen *ebiten.Image) {
 	}
 }
 
-func (g *Game) drawScores(screen *ebiten.Image) {
-	snakes := g.perception.Snakes
+func drawScores(p *perception.Perception, screen *ebiten.Image) {
+	snakes := p.Snakes
 	scoresAtTop := len(snakes)
 	if scoresAtTop > graphics.MaxScoresAtTop {
 		scoresAtTop = graphics.MaxScoresAtTop
 	}
-	g.drawScoreRow(screen, snakes[:scoresAtTop], pxterm24Height/2)
+	drawScoreRow(p, screen, snakes[:scoresAtTop], pxterm24Height/2)
 	// when there are many players, not all scores can be fit in one line
-	g.drawScoreRow(screen, snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
+	drawScoreRow(p, screen, snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
 }
 
-func (g *Game) drawScoreRow(screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
+func drawScoreRow(p *perception.Perception, screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if g.perception.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (g.perception.ElapsedFrames/(model.Tps/4))%2 > 0 {
-			txt, colour := g.scoreStrAndColourForIthSnake(snake)
+		if p.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ElapsedFrames/(model.Tps/4))%2 > 0 {
+			txt, colour := scoreStrAndColourForIthSnake(p, snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
 		}
@@ -326,14 +331,14 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 	screen.DrawImage(img, nil)
 }
 
-func (g *Game) scoreStrAndColourForIthSnake(snake *Snake) (string, color.Color) {
+func scoreStrAndColourForIthSnake(p *perception.Perception, snake *Snake) (string, color.Color) {
 	score := snake.Score
 	if score > model.TargetScore {
 		score = model.TargetScore
 	}
 	txt := fmt.Sprintf(scoreFmt, score)
 	var colour color.Color
-	if g.perception.Stage == Action && g.perception.Countdown < 1 {
+	if p.Stage == Action && p.Countdown < 1 {
 		colour = snake.Colour
 	} else {
 		colour = withRedness(snake.Colour, snake.Links[0].Redness)

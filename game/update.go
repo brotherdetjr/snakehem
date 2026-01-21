@@ -209,7 +209,9 @@ func (g *Game) updateScoreboard() {
 			link.ChangeRedness(-0.1)
 		}
 		if controller.IsAnyJustPressed() {
-			snake.Links[0].Redness = 1
+			for _, link := range snake.Links {
+				link.Redness = 1
+			}
 		}
 	}
 }

@@ -42,9 +42,6 @@ func (g *Game) Update() error {
 			head := snake.Links[0]
 			if g.countdown <= model.Tps {
 				head.ChangeRedness(0.2 * g.snakeHeadsRednessGrowth)
-				if head.Redness >= 1 || head.Redness <= 0 {
-					g.snakeHeadsRednessGrowth *= -1
-				}
 			} else if g.snakeControllers[snake.Id].IsAnyJustPressed() && g.perception.FadeCountdown == 0 {
 				head.Redness = 1
 			} else {
@@ -55,6 +52,9 @@ func (g *Game) Update() error {
 					link.ChangeRedness(-0.1)
 				}
 			}
+		}
+		if g.perception.ElapsedFrames%model.Tps == 0 {
+			g.snakeHeadsRednessGrowth *= -1
 		}
 		if g.countdown > model.Tps {
 			break

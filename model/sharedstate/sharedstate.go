@@ -1,4 +1,4 @@
-package perception
+package sharedstate
 
 import (
 	"snakehem/model"
@@ -6,7 +6,7 @@ import (
 	"snakehem/model/stage"
 )
 
-type Perception struct {
+type SharedState struct {
 	Stage         stage.Stage
 	Grid          [model.GridSize][model.GridSize]any
 	Snakes        []*snake.Snake
@@ -15,8 +15,8 @@ type Perception struct {
 	ElapsedFrames uint64
 }
 
-func NewPerception() Perception {
-	return Perception{
+func NewSharedState() SharedState {
+	return SharedState{
 		Stage:         stage.Lobby,
 		Grid:          [model.GridSize][model.GridSize]any{},
 		Countdown:     3,

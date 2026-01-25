@@ -8,7 +8,7 @@ import (
 	"snakehem/graphics/shader"
 	"snakehem/input/controller"
 	"snakehem/model"
-	"snakehem/model/perception"
+	"snakehem/model/sharedstate"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
@@ -20,7 +20,7 @@ var pxterm16Height = pxterm24.Font.GetHeight()
 var pxterm24Height = pxterm24.Font.GetHeight()
 
 type Game struct {
-	perception              perception.Perception
+	sharedState             sharedstate.SharedState
 	controllers             []controller.Controller
 	snakeControllers        []controller.Controller
 	snakeHeadsRednessGrowth float32
@@ -39,7 +39,7 @@ func Run() {
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		perception:              perception.NewPerception(),
+		sharedState:             sharedstate.NewSharedState(),
 		controllers:             nil,
 		snakeControllers:        nil,
 		snakeHeadsRednessGrowth: -1,

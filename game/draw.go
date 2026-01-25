@@ -10,7 +10,7 @@ import (
 	"snakehem/model"
 	. "snakehem/model/apple"
 	"snakehem/model/direction"
-	"snakehem/model/perception"
+	"snakehem/model/sharedstate"
 	. "snakehem/model/snake"
 	. "snakehem/model/stage"
 	"time"
@@ -22,15 +22,15 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.perception.ElapsedFrames%model.TpsMultiplier == 0 { // TODO proper condition: if perception changed
+	if g.sharedState.ElapsedFrames%model.TpsMultiplier == 0 { // TODO proper condition: if sharedstate changed
 		g.frame.Clear()
-		drawPerception(&g.perception, g.frame)
+		drawSharedState(&g.sharedState, g.frame)
 		g.applyShader(g.frame)
 	}
 	screen.DrawImage(g.frame, nil)
 }
 
-func drawPerception(p *perception.Perception, screen *ebiten.Image) {
+func drawSharedState(p *sharedstate.SharedState, screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	drawItems(p, screen)
 	switch p.Stage {
@@ -96,7 +96,7 @@ func drawPerception(p *perception.Perception, screen *ebiten.Image) {
 	}
 }
 
-func drawScoreboard(p *perception.Perception, screen *ebiten.Image) {
+func drawScoreboard(p *sharedstate.SharedState, screen *ebiten.Image) {
 	vector.DrawFilledRect(
 		screen,
 		0,
@@ -167,7 +167,7 @@ func drawScoreboard(p *perception.Perception, screen *ebiten.Image) {
 	}
 }
 
-func drawTimeElapsed(p *perception.Perception, screen *ebiten.Image) {
+func drawTimeElapsed(p *sharedstate.SharedState, screen *ebiten.Image) {
 	t := time.UnixMilli(int64(float32(p.ElapsedFrames) / model.Tps * 1000))
 	drawTextCentered(
 		screen,
@@ -178,7 +178,7 @@ func drawTimeElapsed(p *perception.Perception, screen *ebiten.Image) {
 	)
 }
 
-func drawCountdown(p *perception.Perception, screen *ebiten.Image) {
+func drawCountdown(p *sharedstate.SharedState, screen *ebiten.Image) {
 	if p.Countdown <= 0 {
 		return
 	}
@@ -212,7 +212,7 @@ func drawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top 
 	font.DrawString(screen, (graphics.GridDimPx-txtWidth)/2, int(top), txt, colour)
 }
 
-func drawItems(p *perception.Perception, screen *ebiten.Image) {
+func drawItems(p *sharedstate.SharedState, screen *ebiten.Image) {
 	for i := 0; i < model.GridSize; i++ {
 		for j := 0; j < model.GridSize; j++ {
 			if val := p.Grid[i][j]; val != nil {
@@ -300,7 +300,7 @@ func drawItems(p *perception.Perception, screen *ebiten.Image) {
 	}
 }
 
-func drawScores(p *perception.Perception, screen *ebiten.Image) {
+func drawScores(p *sharedstate.SharedState, screen *ebiten.Image) {
 	snakes := p.Snakes
 	scoresAtTop := len(snakes)
 	if scoresAtTop > graphics.MaxScoresAtTop {
@@ -311,7 +311,7 @@ func drawScores(p *perception.Perception, screen *ebiten.Image) {
 	drawScoreRow(p, screen, snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
 }
 
-func drawScoreRow(p *perception.Perception, screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
+func drawScoreRow(p *sharedstate.SharedState, screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
 		if p.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ElapsedFrames/(model.Tps/4))%2 > 0 {
@@ -335,7 +335,7 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 	screen.DrawImage(img, nil)
 }
 
-func scoreStrAndColourForIthSnake(p *perception.Perception, snake *Snake) (string, color.Color) {
+func scoreStrAndColourForIthSnake(p *sharedstate.SharedState, snake *Snake) (string, color.Color) {
 	score := snake.Score
 	if score > model.TargetScore {
 		score = model.TargetScore

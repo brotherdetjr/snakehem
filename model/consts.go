@@ -6,6 +6,7 @@ const (
 	Tps           = GameSpeedFps * TpsMultiplier
 	GridSize      = 63
 
+	MaxNameLength                 = 8
 	CountdownSeconds              = 4
 	SnakeTargetLength             = 50
 	HealthReductionPerBite        = 10

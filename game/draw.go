@@ -1,325 +1,34 @@
 package game
 
 import (
-	"fmt"
-	"image/color"
-	"slices"
-	"snakehem/graphics"
-	"snakehem/graphics/pxterm16"
-	"snakehem/graphics/pxterm24"
+	"snakehem/game/common"
+	"snakehem/game/shared"
 	"snakehem/model"
-	. "snakehem/model/apple"
-	"snakehem/model/direction"
-	"snakehem/model/sharedstate"
-	. "snakehem/model/snake"
-	. "snakehem/model/stage"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/pbnjay/pixfont"
-	"golang.org/x/image/colornames"
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.sharedState.ElapsedFrames%model.TpsMultiplier == 0 { // TODO proper condition: if sharedstate changed
-		g.frame.Clear()
-		drawSharedState(&g.sharedState, g.frame)
-		g.applyShader(g.frame)
-	}
-	screen.DrawImage(g.frame, nil)
-}
+	if g.frameCount%model.TpsMultiplier == 0 {
+		// Render shared state
+		// TODO: check if different from lastState, after server-client is implemented
+		g.sharedFrame.Clear()
+		shared.DrawSharedState(g.sharedState, g.sharedFrame)
 
-func drawSharedState(p *sharedstate.SharedState, screen *ebiten.Image) {
-	screen.Fill(colornames.Darkolivegreen)
-	drawItems(p, screen)
-	switch p.Stage {
-	case Lobby:
-		drawScores(p, screen)
-		snakeCount := len(p.Snakes)
-		if snakeCount < 2 {
-			drawTextCentered(
-				screen,
-				"PLAYERS PRESS ANY BUTTON TO JOIN",
-				colornames.Yellow,
-				graphics.GridDimPx/2.5,
-				pxterm16.Font,
-			)
-		} else {
-			drawTextCentered(
-				screen,
-				"PLAYERS PRESS START BUTTON TO GO",
-				colornames.Yellow,
-				graphics.GridDimPx/2.5,
-				pxterm16.Font,
-			)
-			drawTextCentered(
-				screen,
-				"              START             ",
-				color.White,
-				graphics.GridDimPx/2.5,
-				pxterm16.Font,
-			)
-			if snakeCount < model.MaxSnakes {
-				drawTextCentered(
-					screen,
-					"OR ANY OTHER BUTTON TO JOIN",
-					colornames.Yellow,
-					graphics.GridDimPx/2.5+float64(pxterm16Height)*1.5,
-					pxterm16.Font,
-				)
-			}
-		}
-	case Action:
-		if p.FadeCountdown > 0 {
-			vector.DrawFilledRect(
-				screen,
-				0,
-				0,
-				graphics.GridDimPx,
-				graphics.GridDimPx,
-				color.NRGBA{
-					R: 85,
-					G: 107,
-					B: 47,
-					A: uint8((model.GridFadeCountdown - p.FadeCountdown) * 200 / model.GridFadeCountdown),
-				},
-				false,
-			)
-		}
-		drawScores(p, screen)
-		drawCountdown(p, screen)
-		drawTimeElapsed(p, screen)
-	case Scoreboard:
-		drawScoreboard(p, screen)
-		drawTimeElapsed(p, screen)
-	}
-}
-
-func drawScoreboard(p *sharedstate.SharedState, screen *ebiten.Image) {
-	vector.DrawFilledRect(
-		screen,
-		0,
-		0,
-		graphics.GridDimPx,
-		graphics.GridDimPx,
-		color.NRGBA{
-			R: 85,
-			G: 107,
-			B: 47,
-			A: 200,
-		},
-		false,
-	)
-	drawTextCentered(
-		screen,
-		"GAME OVER",
-		colornames.Yellow,
-		float64(pxterm24Height),
-		pxterm24.Font,
-	)
-	drawTextCentered(
-		screen,
-		"PRESS START BUTTON TO PLAY AGAIN",
-		colornames.Yellow,
-		float64(pxterm24Height*2+pxterm16Height),
-		pxterm16.Font,
-	)
-	drawTextCentered(
-		screen,
-		"      START                     ",
-		color.White,
-		float64(pxterm24Height*2+pxterm16Height),
-		pxterm16.Font,
-	)
-	drawTextCentered(
-		screen,
-		"OR SELECT BUTTON TO QUIT",
-		colornames.Yellow,
-		float64(pxterm24Height*2+pxterm16Height*2),
-		pxterm16.Font,
-	)
-	drawTextCentered(
-		screen,
-		"   SELECT               ",
-		color.White,
-		float64(pxterm24Height*2+pxterm16Height*2),
-		pxterm16.Font,
-	)
-	snakes := make([]*Snake, len(p.Snakes))
-	copy(snakes, p.Snakes)
-	slices.SortFunc(snakes, func(a, b *Snake) int {
-		return b.Score - a.Score
-	})
-	for i, snake := range snakes {
-		top := pxterm24Height * 2 * (i + 3)
-		score := snake.Score
-		if score > model.TargetScore {
-			score = model.TargetScore
-		}
-		drawTextCentered(
-			screen,
-			fmt.Sprintf("PLAYER %d "+scoreFmt, i+1, score),
-			withRedness(snake.Colour, snake.Links[0].Redness),
-			float64(top),
-			pxterm24.Font,
-		)
-	}
-}
-
-func drawTimeElapsed(p *sharedstate.SharedState, screen *ebiten.Image) {
-	t := time.UnixMilli(int64(float32(p.ElapsedFrames) / model.Tps * 1000))
-	drawTextCentered(
-		screen,
-		t.Format("04:05.0"),
-		colornames.White,
-		graphics.GridDimPx-float64(pxterm16Height)*1.5,
-		pxterm16.Font,
-	)
-}
-
-func drawCountdown(p *sharedstate.SharedState, screen *ebiten.Image) {
-	if p.Countdown <= 0 {
-		return
-	}
-	var txt string
-	switch p.Countdown {
-	case 3:
-		txt = "THREE"
-	case 2:
-		txt = "TWO"
-	case 1:
-		txt = "ONE"
-	case 0:
-		txt = "GO!"
-	default:
-		txt = "WAIT..."
-	}
-	drawTextCentered(screen, txt, color.White, graphics.GridDimPx/2.5, pxterm24.Font)
-	if p.Countdown > 0 {
-		drawTextCentered(
-			screen,
-			fmt.Sprintf("TARGET SCORE: %d", model.TargetScore),
-			colornames.Yellow,
-			graphics.GridDimPx/2.5+float64(pxterm24Height*2),
-			pxterm24.Font,
-		)
-	}
-}
-
-func drawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top float64, font *pixfont.PixFont) {
-	txtWidth := font.MeasureString(txt)
-	font.DrawString(screen, (graphics.GridDimPx-txtWidth)/2, int(top), txt, colour)
-}
-
-func drawItems(p *sharedstate.SharedState, screen *ebiten.Image) {
-	for i := 0; i < model.GridSize; i++ {
-		for j := 0; j < model.GridSize; j++ {
-			if val := p.Grid[i][j]; val != nil {
-				switch item := val.(type) {
-				case *Link:
-					snake := p.Snakes[item.SnakeId]
-					shrink := (1 - float32(item.HealthPercent)/100) * graphics.CellDimPx * 0.5
-					if item != snake.Links[0] || p.Countdown > 0 {
-						vector.DrawFilledRect(
-							screen,
-							float32(item.X*graphics.CellDimPx)+shrink,
-							float32(item.Y*graphics.CellDimPx)+shrink,
-							graphics.CellDimPx-shrink*2,
-							graphics.CellDimPx-shrink*2,
-							withRedness(snake.Colour, item.Redness),
-							false,
-						)
-					} else {
-						var x1, y1, x2, y2 float32
-						switch snake.Direction {
-						case direction.Up:
-							x1 = float32(item.X*graphics.CellDimPx) + graphics.EyeGapPx
-							y1 = float32(item.Y*graphics.CellDimPx) + graphics.EyeGapPx
-							x2 = float32((item.X+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							y2 = float32(item.Y*graphics.CellDimPx) + graphics.EyeGapPx
-						case direction.Down:
-							x1 = float32(item.X*graphics.CellDimPx) + graphics.EyeGapPx
-							y1 = float32((item.Y+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							x2 = float32((item.X+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							y2 = float32((item.Y+1)*graphics.CellDimPx) - graphics.EyeGapPx
-						case direction.Left:
-							x1 = float32(item.X*graphics.CellDimPx) + graphics.EyeGapPx
-							y1 = float32((item.Y+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							x2 = float32(item.X*graphics.CellDimPx) + graphics.EyeGapPx
-							y2 = float32(item.Y*graphics.CellDimPx) + graphics.EyeGapPx
-						case direction.Right:
-							x1 = float32((item.X+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							y1 = float32((item.Y+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							x2 = float32((item.X+1)*graphics.CellDimPx) - graphics.EyeGapPx
-							y2 = float32(item.Y*graphics.CellDimPx) + graphics.EyeGapPx
-						case direction.None:
-						}
-						if x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0 {
-							vector.DrawFilledCircle(
-								screen,
-								x1,
-								y1,
-								graphics.EyeRadiusPx,
-								withRedness(snake.Colour, item.Redness),
-								false,
-							)
-							vector.DrawFilledCircle(
-								screen,
-								x2,
-								y2,
-								graphics.EyeRadiusPx,
-								withRedness(snake.Colour, item.Redness),
-								false,
-							)
-						} else {
-							vector.DrawFilledRect(
-								screen,
-								float32(item.X*graphics.CellDimPx),
-								float32(item.Y*graphics.CellDimPx),
-								graphics.CellDimPx,
-								graphics.CellDimPx,
-								withRedness(snake.Colour, item.Redness),
-								false,
-							)
-						}
-					}
-				case *Apple:
-					vector.DrawFilledRect(
-						screen,
-						float32(item.X*graphics.CellDimPx),
-						float32(item.Y*graphics.CellDimPx),
-						graphics.CellDimPx,
-						graphics.CellDimPx,
-						colornames.Red,
-						false,
-					)
-				}
-			}
+		if g.localState.Dirty() {
+			g.localFrame.Clear()
+			g.localState.DrawLocalState(g.localFrame)
 		}
 	}
-}
 
-func drawScores(p *sharedstate.SharedState, screen *ebiten.Image) {
-	snakes := p.Snakes
-	scoresAtTop := len(snakes)
-	if scoresAtTop > graphics.MaxScoresAtTop {
-		scoresAtTop = graphics.MaxScoresAtTop
-	}
-	drawScoreRow(p, screen, snakes[:scoresAtTop], pxterm24Height/2)
-	// when there are many players, not all scores can be fit in one line
-	drawScoreRow(p, screen, snakes[scoresAtTop:], graphics.GridDimPx-pxterm24Height-pxterm16Height*2)
-}
+	// Composite shared and local frames
+	composite := ebiten.NewImage(common.GridDimPx, common.GridDimPx)
+	composite.DrawImage(g.sharedFrame, nil)
+	composite.DrawImage(g.localFrame, nil)
 
-func drawScoreRow(p *sharedstate.SharedState, screen *ebiten.Image, snakes []*Snake, rowTopPos int) {
-	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
-	for i, snake := range snakes {
-		if p.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ElapsedFrames/(model.Tps/4))%2 > 0 {
-			txt, colour := scoreStrAndColourForIthSnake(p, snake)
-			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
-			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
-		}
-	}
+	// Apply shader to composite
+	g.applyShader(composite)
+	screen.DrawImage(composite, nil)
 }
 
 func (g *Game) applyShader(screen *ebiten.Image) {
@@ -333,32 +42,4 @@ func (g *Game) applyShader(screen *ebiten.Image) {
 	img := ebiten.NewImage(w, h)
 	img.DrawRectShader(w, h, g.shader, opts)
 	screen.DrawImage(img, nil)
-}
-
-func scoreStrAndColourForIthSnake(p *sharedstate.SharedState, snake *Snake) (string, color.Color) {
-	score := snake.Score
-	if score > model.TargetScore {
-		score = model.TargetScore
-	}
-	txt := fmt.Sprintf(scoreFmt, score)
-	var colour color.Color
-	if p.Stage == Action && p.Countdown < 1 {
-		colour = snake.Colour
-	} else {
-		colour = withRedness(snake.Colour, snake.Links[0].Redness)
-	}
-	return txt, colour
-}
-
-func withRedness(colour color.Color, redness float32) color.Color {
-	red, green, blue, _ := colour.RGBA()
-	r := float32(red >> 8)
-	g := float32(green >> 8)
-	b := float32(blue >> 8)
-	return color.NRGBA{
-		R: uint8(r + (255-r)*redness),
-		G: uint8(g * (1 - redness)),
-		B: uint8(b * (1 - redness)),
-		A: 255,
-	}
 }

@@ -9,6 +9,7 @@ import (
 
 type Snake struct {
 	Id        int
+	Name      string
 	Links     []*Link
 	Colour    color.Color
 	Direction direction.Direction
@@ -23,12 +24,13 @@ type Link struct {
 	Redness       float32
 }
 
-func NewSnake(id int, colour color.Color) *Snake {
+func NewSnake(id int, name string, colour color.Color) *Snake {
 	snake := &Snake{
 		Id:     id,
 		Links:  make([]*Link, 1),
 		Colour: colour,
 		Score:  0,
+		Name:   name,
 	}
 	snake.Links[0] = &Link{
 		HealthPercent: 100,

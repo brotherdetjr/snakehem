@@ -1,33 +1,30 @@
 package game
 
 import (
-	"fmt"
-	"math"
-	"snakehem/graphics"
-	"snakehem/graphics/pxterm24"
-	"snakehem/graphics/shader"
+	"snakehem/assets/shader"
+	"snakehem/game/common"
+	"snakehem/game/local"
+	"snakehem/game/shared"
 	"snakehem/input/controller"
 	"snakehem/model"
-	"snakehem/model/sharedstate"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
 	"github.com/rs/zerolog/log"
 )
 
-var scoreFmt = "%0" + fmt.Sprint(int(math.Log10(model.TargetScore))+1) + "d"
-var pxterm16Height = pxterm24.Font.GetHeight()
-var pxterm24Height = pxterm24.Font.GetHeight()
-
 type Game struct {
-	sharedState             sharedstate.SharedState
+	sharedState             *shared.State
+	localState              *local.State
 	controllers             []controller.Controller
-	snakeControllers        []controller.Controller
+	activeControllers       []controller.Controller
 	snakeHeadsRednessGrowth float32
 	countdown               int
 	applePresent            bool
 	shader                  *ebiten.Shader
-	frame                   *ebiten.Image
+	sharedFrame             *ebiten.Image
+	localFrame              *ebiten.Image
+	frameCount              uint64
 }
 
 func Run() {
@@ -39,14 +36,17 @@ func Run() {
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		sharedState:             sharedstate.NewSharedState(),
+		sharedState:             shared.NewSharedState(),
+		localState:              local.NewLocalState(),
 		controllers:             nil,
-		snakeControllers:        nil,
+		activeControllers:       nil,
 		snakeHeadsRednessGrowth: -1,
 		countdown:               model.Tps * model.CountdownSeconds,
 		applePresent:            false,
 		shader:                  shader.NewShader(),
-		frame:                   ebiten.NewImage(graphics.GridDimPx, graphics.GridDimPx),
+		sharedFrame:             ebiten.NewImage(common.GridDimPx, common.GridDimPx),
+		localFrame:              ebiten.NewImage(common.GridDimPx, common.GridDimPx),
+		frameCount:              0,
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()
@@ -54,5 +54,5 @@ func Run() {
 }
 
 func (g *Game) Layout(_, _ int) (screenWidth, screenHeight int) {
-	return graphics.GridDimPx, graphics.GridDimPx
+	return common.GridDimPx, common.GridDimPx
 }

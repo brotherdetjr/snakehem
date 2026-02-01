@@ -22,8 +22,7 @@ type Game struct {
 	countdown               int
 	applePresent            bool
 	shader                  *ebiten.Shader
-	sharedFrame             *ebiten.Image
-	localFrame              *ebiten.Image
+	lastFrame               *ebiten.Image
 	frameCount              uint64
 }
 
@@ -44,8 +43,7 @@ func Run() {
 		countdown:               model.Tps * model.CountdownSeconds,
 		applePresent:            false,
 		shader:                  shader.NewShader(),
-		sharedFrame:             ebiten.NewImage(common.GridDimPx, common.GridDimPx),
-		localFrame:              ebiten.NewImage(common.GridDimPx, common.GridDimPx),
+		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
 		frameCount:              0,
 	}
 	if err := ebiten.RunGame(g); err != nil {

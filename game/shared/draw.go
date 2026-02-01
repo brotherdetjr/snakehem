@@ -19,7 +19,7 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-func DrawSharedState(p *State, screen *ebiten.Image) {
+func (p *State) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	drawItems(p, screen)
 	switch p.Stage {

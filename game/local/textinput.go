@@ -25,7 +25,6 @@ type TextInput struct {
 	maxLength  int
 	controller controller.Controller
 	callback   func(string)
-	dirty      bool
 }
 
 func NewTextInput(value string, label string, maxLength int, controller controller.Controller, callback func(string)) *TextInput {
@@ -36,14 +35,7 @@ func NewTextInput(value string, label string, maxLength int, controller controll
 		maxLength:  maxLength,
 		controller: controller,
 		callback:   callback,
-		dirty:      true,
 	}
-}
-
-func (t *TextInput) Dirty() bool {
-	var result = t.dirty
-	t.dirty = false
-	return result
 }
 
 func (t *TextInput) Submit() {
@@ -54,7 +46,6 @@ func (t *TextInput) AddChar() {
 	if len(t.value) == t.maxLength {
 		return
 	}
-	t.dirty = true
 	t.value += string(AvailableChars[t.charIndex])
 }
 
@@ -62,17 +53,14 @@ func (t *TextInput) DelChar() {
 	if t.value == "" {
 		return
 	}
-	t.dirty = true
 	t.value = t.value[:len(t.value)-1]
 }
 
 func (t *TextInput) NextChar() int {
-	t.dirty = true
 	return (t.charIndex + 1) % len(AvailableChars)
 }
 
 func (t *TextInput) PrevChar() int {
-	t.dirty = true
 	if t.charIndex == 0 {
 		return len(AvailableChars) - 1
 	}

@@ -1,21 +1,26 @@
 package local
 
+import "snakehem/game/local/textinput"
+
 type State struct {
-	textInput *TextInput
+	stage     Stage
+	textInput *textinput.TextInput
 }
 
 func NewLocalState() *State {
 	return &State{
+		stage:     Off,
 		textInput: nil,
 	}
 }
 
-func (s *State) SetTextInput(textInput *TextInput) {
-	s.textInput = textInput
+func (s *State) GetStage() Stage {
+	return s.stage
 }
 
-func (s *State) Update() {
-	if s.textInput != nil {
-		s.textInput.Update()
-	}
-}
+type Stage uint8
+
+const (
+	Off Stage = iota
+	PlayerName
+)

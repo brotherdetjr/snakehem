@@ -7,13 +7,13 @@ import (
 	"slices"
 	"snakehem/game/common"
 	"snakehem/game/local"
+	"snakehem/game/shared"
 	"snakehem/input"
 	"snakehem/input/keyboard"
 	"snakehem/model"
 	. "snakehem/model/apple"
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
-	. "snakehem/model/stage"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -28,16 +28,16 @@ func (g *Game) Update() error {
 	g.frameCount++
 	g.localState.Update()
 	switch g.sharedState.Stage {
-	case Lobby:
+	case shared.Lobby:
 		g.updateHeadCount()
-	case Action:
+	case shared.Action:
 		if g.countdown > 0 {
 			g.countdown--
 		}
 		if g.sharedState.FadeCountdown > 0 {
 			g.sharedState.FadeCountdown--
 			if g.sharedState.FadeCountdown == 0 {
-				g.sharedState.Stage = Scoreboard
+				g.sharedState.Stage = shared.Scoreboard
 				break
 			}
 		}
@@ -133,7 +133,7 @@ func (g *Game) Update() error {
 			g.tryToPutAnotherApple()
 		}
 		g.sharedState.ActionFrameCount++
-	case Scoreboard:
+	case shared.Scoreboard:
 		g.updateScoreboard()
 	}
 	g.sharedState.Countdown = int(math.Ceil(float64(g.countdown)/model.Tps)) - 1
@@ -181,13 +181,11 @@ func (g *Game) updateHeadCount() {
 			snakeCount := len(snakes)
 			snakeIdx := slices.IndexFunc(snakes, func(snake *Snake) bool { return g.activeControllers[snake.Id].Equals(c) })
 			if snakeIdx == -1 {
-				if snakeCount < model.MaxSnakes {
+				if snakeCount < model.MaxSnakes && g.localState.GetStage() == local.Off {
 					// Start name entry for new player
-					g.localState.SetTextInput(local.NewTextInput(
-						"Player "+string(rune('0'+(snakeCount+1))),
-						"ENTER YOUR NAME",
-						model.MaxNameLength,
+					g.localState.StagePlayerName(
 						c,
+						"Player "+string(rune('0'+(snakeCount+1))),
 						func(s string) {
 							// Submit name and join game
 							snakes := g.sharedState.Snakes
@@ -200,14 +198,14 @@ func (g *Game) updateHeadCount() {
 							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
 							g.layoutSnakes()
-							g.localState.SetTextInput(nil)
+							log.Info().Str("Player name!", s).Send()
 						},
-					))
+					)
 				}
 			} else {
 				snakes[snakeIdx].Links[0].Redness = 1
 				if c.IsStartJustPressed() && snakeCount > 1 {
-					g.sharedState.Stage = Action
+					g.sharedState.Stage = shared.Action
 				}
 			}
 		}
@@ -282,7 +280,7 @@ func (g *Game) tryToPutAnotherApple() {
 
 func (g *Game) restartPreservingSnakes() {
 	g.sharedState.Grid = [model.GridSize][model.GridSize]any{}
-	g.sharedState.Stage = Lobby
+	g.sharedState.Stage = shared.Lobby
 	g.sharedState.FadeCountdown = 0
 	g.sharedState.ActionFrameCount = 0
 	g.countdown = model.Tps * model.CountdownSeconds

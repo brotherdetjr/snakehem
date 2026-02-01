@@ -3,11 +3,10 @@ package shared
 import (
 	"snakehem/model"
 	"snakehem/model/snake"
-	"snakehem/model/stage"
 )
 
 type State struct {
-	Stage            stage.Stage
+	Stage            Stage
 	Grid             [model.GridSize][model.GridSize]any
 	Snakes           []*snake.Snake
 	Countdown        int
@@ -17,10 +16,18 @@ type State struct {
 
 func NewSharedState() *State {
 	return &State{
-		Stage:            stage.Lobby,
+		Stage:            Lobby,
 		Grid:             [model.GridSize][model.GridSize]any{},
 		Countdown:        3,
 		FadeCountdown:    0,
 		ActionFrameCount: 0,
 	}
 }
+
+type Stage uint8
+
+const (
+	Lobby Stage = iota
+	Action
+	Scoreboard
+)

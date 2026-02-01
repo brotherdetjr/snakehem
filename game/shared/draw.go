@@ -11,7 +11,6 @@ import (
 	"snakehem/model/apple"
 	"snakehem/model/direction"
 	"snakehem/model/snake"
-	"snakehem/model/stage"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,7 +22,7 @@ func (p *State) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	drawItems(p, screen)
 	switch p.Stage {
-	case stage.Lobby:
+	case Lobby:
 		drawScores(p, screen)
 		snakeCount := len(p.Snakes)
 		if snakeCount < 2 {
@@ -59,7 +58,7 @@ func (p *State) Draw(screen *ebiten.Image) {
 				)
 			}
 		}
-	case stage.Action:
+	case Action:
 		if p.FadeCountdown > 0 {
 			vector.DrawFilledRect(
 				screen,
@@ -79,7 +78,7 @@ func (p *State) Draw(screen *ebiten.Image) {
 		drawScores(p, screen)
 		drawCountdown(p, screen)
 		drawTimeElapsed(p, screen)
-	case stage.Scoreboard:
+	case Scoreboard:
 		drawScoreboard(p, screen)
 		drawTimeElapsed(p, screen)
 	}
@@ -187,7 +186,7 @@ func drawScores(p *State, screen *ebiten.Image) {
 func drawScoreRow(p *State, screen *ebiten.Image, snakes []*snake.Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, snake := range snakes {
-		if p.Stage != stage.Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ActionFrameCount/(model.Tps/4))%2 > 0 {
+		if p.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ActionFrameCount/(model.Tps/4))%2 > 0 {
 			txt, colour := scoreStrAndColourForIthSnake(p, snake)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
@@ -202,7 +201,7 @@ func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.C
 	}
 	txt := fmt.Sprintf(common.ScoreFmt, score)
 	var colour color.Color
-	if p.Stage == stage.Action && p.Countdown < 1 {
+	if p.Stage == Action && p.Countdown < 1 {
 		colour = snake.Colour
 	} else {
 		colour = common.WithRedness(snake.Colour, snake.Links[0].Redness)

@@ -42,16 +42,9 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 		pxterm24.Font,
 	)
 
-	// Draw current character selection
-	charY := currentNameY + float64(common.Pxterm24Height*2)
-	currentChar := string(AvailableChars[t.charIndex])
-	common.DrawTextCentered(
-		screen,
-		currentChar,
-		colornames.Cyan,
-		charY,
-		pxterm24.Font,
-	)
+	// Draw virtual keyboard grid
+	keyboardStartY := currentNameY + float64(common.Pxterm24Height*3)
+	t.drawKeyboardGrid(screen, keyboardStartY)
 
 	// Draw error if needed
 	if t.error != nil {
@@ -60,9 +53,71 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 	}
 
 	// Draw instructions
-	instructionsY := common.GridDimPx - float64(common.Pxterm16Height*6)
-	common.DrawTextCentered(screen, "UP/DOWN: SELECT CHARACTER", colornames.Yellow, instructionsY, pxterm16.Font)
-	common.DrawTextCentered(screen, "RIGHT: ADD CHARACTER", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*1.5, pxterm16.Font)
-	common.DrawTextCentered(screen, "LEFT: DELETE CHARACTER", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*3, pxterm16.Font)
-	common.DrawTextCentered(screen, "START: SUBMIT", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*4.5, pxterm16.Font)
+	instructionsY := common.GridDimPx - float64(common.Pxterm16Height*5)
+	common.DrawTextCentered(screen, "ARROWS: NAVIGATE KEYBOARD", colornames.Yellow, instructionsY, pxterm16.Font)
+	common.DrawTextCentered(screen, "START: PRESS SELECTED KEY", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*1.5, pxterm16.Font)
+	common.DrawTextCentered(screen, "USE [OK] TO SUBMIT, [DEL] TO DELETE", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*3, pxterm16.Font)
+}
+
+func (t *TextInput) drawKeyboardGrid(screen *ebiten.Image, startY float64) {
+	const keySpacingX = 70 // Horizontal spacing between keys
+	const keySpacingY = 32 // Vertical spacing between rows
+
+	// Calculate grid dimensions
+	totalGridWidth := (KeyboardCols - 1) * keySpacingX
+	gridStartX := (common.GridDimPx - totalGridWidth) / 2
+
+	for row := 0; row < KeyboardRows; row++ {
+		for col := 0; col < KeyboardCols; col++ {
+			key := keyboardGrid[row][col]
+			if key == nil {
+				continue // Skip empty cells
+			}
+
+			// Calculate position
+			x := gridStartX + (col * keySpacingX)
+			y := int(startY) + (row * keySpacingY)
+
+			// Determine if this key is selected
+			isSelected := (row == t.cursorRow && col == t.cursorCol)
+
+			// Determine display text and color
+			var displayText string
+			var textColor color.Color
+
+			if isSelected {
+				textColor = colornames.Cyan
+				if key.special != SpecialKeyNone {
+					displayText = "[" + key.displayStr + "]"
+				} else {
+					displayText = "[" + string(key.char) + "]"
+				}
+			} else {
+				if key.special != SpecialKeyNone {
+					textColor = colornames.Orange // Special keys in orange
+					displayText = "[" + key.displayStr + "]"
+				} else {
+					textColor = colornames.White
+					displayText = string(key.char)
+				}
+			}
+
+			// Draw the key
+			// Center the text for this key
+			if key.special == SpecialKeyNone {
+				txtWidth := pxterm24.Font.MeasureString(displayText)
+				pxterm24.Font.DrawString(screen, x-txtWidth/2, y, displayText, textColor)
+			} else {
+				txtWidth := pxterm16.Font.MeasureString(displayText)
+				pxterm16.Font.DrawString(
+					screen,
+					x-txtWidth/2,
+					y+common.Pxterm16Height/5,
+					displayText,
+					textColor,
+				)
+
+			}
+		}
+	}
 }

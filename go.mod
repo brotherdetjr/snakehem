@@ -3,7 +3,7 @@ module snakehem
 go 1.24.0
 
 require (
-	github.com/hajimehoshi/ebiten/v2 v2.9.7
+	github.com/hajimehoshi/ebiten/v2 v2.9.8
 	github.com/pbnjay/pixfont v0.0.0-20200714042608-33b744692567
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/image v0.35.0

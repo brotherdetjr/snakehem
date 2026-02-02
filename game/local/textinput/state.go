@@ -155,14 +155,3 @@ func (t *TextInput) initKeyboardGrid() {
 		}
 	}
 }
-
-func (t *TextInput) getCurrentKey() *KeyboardKey {
-	return t.keyboardGrid[t.cursorRow][t.cursorCol]
-}
-
-func (t *TextInput) isValidPosition(row, col int) bool {
-	if row < 0 || row >= t.keyboardRows || col < 0 || col >= t.keyboardCols {
-		return false
-	}
-	return t.keyboardGrid[row][col] != nil
-}

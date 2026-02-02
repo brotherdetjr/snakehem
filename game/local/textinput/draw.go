@@ -53,9 +53,9 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 	}
 
 	// Draw instructions
-	instructionsY := common.GridDimPx - float64(common.Pxterm16Height*3)
+	instructionsY := common.GridDimPx - float64(common.Pxterm16Height)*2.5
 	common.DrawTextCentered(screen, "ARROWS: NAVIGATE KEYBOARD", colornames.Yellow, instructionsY, pxterm16.Font)
-	common.DrawTextCentered(screen, "START: PRESS SELECTED KEY", colornames.Yellow, instructionsY+float64(common.Pxterm16Height)*1.5, pxterm16.Font)
+	common.DrawTextCentered(screen, "START: PRESS SELECTED KEY", colornames.Yellow, instructionsY+float64(common.Pxterm16Height), pxterm16.Font)
 }
 
 func (t *TextInput) drawKeyboardGrid(screen *ebiten.Image, startY float64) {

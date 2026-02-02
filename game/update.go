@@ -198,7 +198,6 @@ func (g *Game) updateHeadCount() {
 							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
 							g.layoutSnakes()
-							log.Info().Str("Player name!", s).Send()
 						},
 					)
 				}

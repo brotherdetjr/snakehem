@@ -2,21 +2,19 @@ package textinput
 
 import (
 	"errors"
+	"math"
 	"snakehem/input/controller"
 	"strings"
-)
-
-const (
-	KeyboardCols = 10
-	KeyboardRows = 4
 )
 
 type SpecialKey int
 
 const (
 	SpecialKeyNone SpecialKey = iota
-	SpecialKeyOK
-	SpecialKeyDEL
+	SpecialKeyEnter
+	SpecialKeyClear
+	SpecialKeyDel
+	SpecialKeySpace
 )
 
 type KeyboardKey struct {
@@ -25,39 +23,79 @@ type KeyboardKey struct {
 	displayStr string
 }
 
-var keyboardGrid [KeyboardRows][KeyboardCols]*KeyboardKey
-
-var AvailableChars = []rune{
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-	' ',
+var AZ09 = []rune{
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+	'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
+	'4', '5', '6', '7', '8', '9',
 }
 
 type TextInput struct {
-	value      string
-	label      string
-	cursorRow  int
-	cursorCol  int
-	maxLength  int
-	controller controller.Controller
-	callback   func(string)
-	validation func(string) error
-	error      error
+	value          string
+	label          string
+	cursorRow      int
+	cursorCol      int
+	maxLength      int
+	controller     controller.Controller
+	callback       func(string)
+	validation     func(string) error
+	error          error
+	availableChars []rune
+	keyboardGrid   [][]*KeyboardKey
+	spaceAvailable bool
+	keyboardCols   int
+	keyboardRows   int
 }
 
-func NewTextInput(value string, label string, maxLength int, controller controller.Controller, callback func(string)) *TextInput {
-	return &TextInput{
-		value:      value,
-		label:      label,
-		cursorRow:  0,
-		cursorCol:  0,
-		maxLength:  maxLength,
-		controller: controller,
-		callback:   callback,
-		validation: nil,
-		error:      nil,
+func NewTextInput(controller controller.Controller) *TextInput {
+	t := &TextInput{
+		value:          "",
+		label:          "",
+		cursorRow:      0,
+		cursorCol:      1, // row 0 col 1 -> SPACE key
+		maxLength:      24,
+		controller:     controller,
+		callback:       func(string) {},
+		validation:     nil,
+		error:          nil,
+		availableChars: AZ09,
+		spaceAvailable: true,
+		keyboardCols:   10,
 	}
+	t.initKeyboardGrid()
+	return t
+}
+
+func (t *TextInput) WithValue(value string) *TextInput {
+	t.value = value
+	return t
+}
+
+func (t *TextInput) WithLabel(label string) *TextInput {
+	t.label = label
+	return t
+}
+
+func (t *TextInput) WithMaxLength(maxLength int) *TextInput {
+	t.maxLength = maxLength
+	return t
+}
+
+func (t *TextInput) WithCallback(callback func(string)) *TextInput {
+	t.callback = callback
+	return t
+}
+
+func (t *TextInput) WithAvailableChars(availableChars []rune) *TextInput {
+	t.availableChars = availableChars
+	t.initKeyboardGrid()
+	return t
+}
+
+func (t *TextInput) WithSpaceAvailable(spaceAvailable bool) *TextInput {
+	t.spaceAvailable = spaceAvailable
+	t.initKeyboardGrid()
+	return t
 }
 
 func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
@@ -70,54 +108,61 @@ func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 	return t
 }
 
-func init() {
-	initKeyboardGrid()
-}
-
-func initKeyboardGrid() {
+func (t *TextInput) initKeyboardGrid() {
 	// Map regular characters from AvailableChars to grid
-	for i, char := range AvailableChars {
-		row := i / KeyboardCols
-		col := i % KeyboardCols
+	t.keyboardRows = int(math.Ceil(float64(len(t.availableChars))/float64(t.keyboardCols)) + 1)
+	t.keyboardGrid = make([][]*KeyboardKey, t.keyboardRows)
+	for i := range t.keyboardGrid {
+		t.keyboardGrid[i] = make([]*KeyboardKey, t.keyboardCols)
+	}
 
-		if row < KeyboardRows && col < KeyboardCols {
-			displayStr := string(char)
-			if char == ' ' {
-				displayStr = "SPACE"
-			}
-			keyboardGrid[row][col] = &KeyboardKey{
+	for i, char := range t.availableChars {
+		row := i/t.keyboardCols + 1
+		col := i % t.keyboardCols
+		if row < t.keyboardRows && col < t.keyboardCols {
+			t.keyboardGrid[row][col] = &KeyboardKey{
 				char:       char,
 				special:    SpecialKeyNone,
-				displayStr: displayStr,
+				displayStr: string(char),
 			}
 		}
 	}
 
 	// Add special keys
-	// OK button at Row 3, Col 7
-	keyboardGrid[3][9] = &KeyboardKey{
+	t.keyboardGrid[0][1] = &KeyboardKey{
 		char:       0,
-		special:    SpecialKeyOK,
-		displayStr: "OK",
+		special:    SpecialKeyEnter,
+		displayStr: "ENTER",
 	}
 
-	// DEL button at Row 3, Col 8
-	keyboardGrid[3][7] = &KeyboardKey{
+	t.keyboardGrid[0][3] = &KeyboardKey{
 		char:       0,
-		special:    SpecialKeyDEL,
+		special:    SpecialKeyClear,
+		displayStr: "CLEAR",
+	}
+
+	t.keyboardGrid[0][5] = &KeyboardKey{
+		char:       0,
+		special:    SpecialKeyDel,
 		displayStr: "DEL",
 	}
 
-	// Row 3, Col 8 remains nil (empty)
+	if t.spaceAvailable {
+		t.keyboardGrid[0][7] = &KeyboardKey{
+			char:       ' ',
+			special:    SpecialKeySpace,
+			displayStr: "SPACE",
+		}
+	}
 }
 
 func (t *TextInput) getCurrentKey() *KeyboardKey {
-	return keyboardGrid[t.cursorRow][t.cursorCol]
+	return t.keyboardGrid[t.cursorRow][t.cursorCol]
 }
 
-func isValidPosition(row, col int) bool {
-	if row < 0 || row >= KeyboardRows || col < 0 || col >= KeyboardCols {
+func (t *TextInput) isValidPosition(row, col int) bool {
+	if row < 0 || row >= t.keyboardRows || col < 0 || col >= t.keyboardCols {
 		return false
 	}
-	return keyboardGrid[row][col] != nil
+	return t.keyboardGrid[row][col] != nil
 }

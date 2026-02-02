@@ -14,15 +14,15 @@ func (s *State) Update() {
 
 func (s *State) StagePlayerName(c controller.Controller, playerName string, cb func(string)) {
 	s.stage = PlayerName
-	s.textInput = textinput.NewTextInput(
-		playerName,
-		"ENTER YOUR NAME",
-		model.MaxNameLength,
-		c,
-		func(name string) {
+	s.textInput = textinput.
+		NewTextInput(c).
+		WithLabel("ENTER YOUR NAME").
+		WithValue(playerName).
+		WithMaxLength(model.MaxNameLength).
+		ValidateNotEmpty("name cannot be empty").
+		WithCallback(func(name string) {
 			cb(name)
 			s.stage = Off
 			s.textInput = nil
-		},
-	).ValidateNotEmpty("name cannot be empty")
+		})
 }

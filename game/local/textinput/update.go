@@ -8,9 +8,8 @@ func (t *TextInput) Submit() {
 	}
 }
 
-func (t *TextInput) AddChar() {
-	// Legacy method - now uses cursor position
-	t.AddCharAtCursor()
+func (t *TextInput) Clear() {
+	t.value = ""
 }
 
 func (t *TextInput) DelChar() {
@@ -25,22 +24,22 @@ func (t *TextInput) moveLeft() {
 
 	// Wrap to end of current row
 	if newCol < 0 {
-		newCol = KeyboardCols - 1
+		newCol = t.keyboardCols - 1
 	}
 
 	// If position invalid, keep searching left with wrapping
 	startCol := newCol
-	for !isValidPosition(newRow, newCol) {
+	for !t.isValidPosition(newRow, newCol) {
 		newCol--
 		if newCol < 0 {
-			newCol = KeyboardCols - 1
+			newCol = t.keyboardCols - 1
 		}
 		if newCol == startCol {
 			break // Prevent infinite loop
 		}
 	}
 
-	if isValidPosition(newRow, newCol) {
+	if t.isValidPosition(newRow, newCol) {
 		t.cursorRow = newRow
 		t.cursorCol = newCol
 	}
@@ -51,15 +50,15 @@ func (t *TextInput) moveRight() {
 	newRow := t.cursorRow
 
 	// Wrap to start of current row
-	if newCol >= KeyboardCols {
+	if newCol >= t.keyboardCols {
 		newCol = 0
 	}
 
 	// If position invalid, keep searching right with wrapping
 	startCol := newCol
-	for !isValidPosition(newRow, newCol) {
+	for !t.isValidPosition(newRow, newCol) {
 		newCol++
-		if newCol >= KeyboardCols {
+		if newCol >= t.keyboardCols {
 			newCol = 0
 		}
 		if newCol == startCol {
@@ -67,7 +66,7 @@ func (t *TextInput) moveRight() {
 		}
 	}
 
-	if isValidPosition(newRow, newCol) {
+	if t.isValidPosition(newRow, newCol) {
 		t.cursorRow = newRow
 		t.cursorCol = newCol
 	}
@@ -79,22 +78,22 @@ func (t *TextInput) moveUp() {
 
 	// Wrap to bottom
 	if newRow < 0 {
-		newRow = KeyboardRows - 1
+		newRow = t.keyboardRows - 1
 	}
 
 	// If position invalid, try to find valid position
 	startRow := newRow
-	for !isValidPosition(newRow, newCol) {
+	for !t.isValidPosition(newRow, newCol) {
 		newRow--
 		if newRow < 0 {
-			newRow = KeyboardRows - 1
+			newRow = t.keyboardRows - 1
 		}
 		if newRow == startRow {
 			break // Prevent infinite loop
 		}
 	}
 
-	if isValidPosition(newRow, newCol) {
+	if t.isValidPosition(newRow, newCol) {
 		t.cursorRow = newRow
 		t.cursorCol = newCol
 	}
@@ -105,15 +104,15 @@ func (t *TextInput) moveDown() {
 	newCol := t.cursorCol
 
 	// Wrap to top
-	if newRow >= KeyboardRows {
+	if newRow >= t.keyboardRows {
 		newRow = 0
 	}
 
 	// If position invalid, try to find valid position
 	startRow := newRow
-	for !isValidPosition(newRow, newCol) {
+	for !t.isValidPosition(newRow, newCol) {
 		newRow++
-		if newRow >= KeyboardRows {
+		if newRow >= t.keyboardRows {
 			newRow = 0
 		}
 		if newRow == startRow {
@@ -121,7 +120,7 @@ func (t *TextInput) moveDown() {
 		}
 	}
 
-	if isValidPosition(newRow, newCol) {
+	if t.isValidPosition(newRow, newCol) {
 		t.cursorRow = newRow
 		t.cursorCol = newCol
 	}
@@ -141,9 +140,11 @@ func (t *TextInput) pressCurrentKey() {
 	}
 
 	switch key.special {
-	case SpecialKeyOK:
+	case SpecialKeyEnter:
 		t.Submit()
-	case SpecialKeyDEL:
+	case SpecialKeyClear:
+		t.Clear()
+	case SpecialKeyDel:
 		t.DelChar()
 	default:
 		// Regular character

@@ -41,8 +41,8 @@ func (t *TextInput) Clear() {
 func (t *TextInput) DeleteLastChar() {
 	if t.value != "" {
 		t.value = t.value[:len(t.value)-1]
+		t.updateCaps()
 	}
-	t.updateCaps()
 }
 
 func (t *TextInput) AddSelectedChar() {

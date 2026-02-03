@@ -154,7 +154,6 @@ func (t *TextInput) initKeyboardGrid() {
 	if t.keyboardCols < getMinKeyCols(t.spaceAvailable, t.capsBehaviour) {
 		panic("not enough keyboard cols")
 	}
-	// TODO validate we don't mix upper and lower case in the layout
 
 	// Map regular characters from AvailableChars to grid
 	t.keyboardRows = int(math.Ceil(float64(len(t.availableChars))/float64(t.keyboardCols)) + 1)
@@ -164,8 +163,12 @@ func (t *TextInput) initKeyboardGrid() {
 	}
 
 	for i, char := range t.availableChars {
-		if t.capsMode {
-			char = unicode.ToUpper(char)
+		if unicode.IsLetter(char) {
+			if t.capsMode {
+				char = unicode.ToUpper(char)
+			} else { // in case if available chars are listed in upper case
+				char = unicode.ToLower(char)
+			}
 		}
 		row := i/t.keyboardCols + 1
 		col := i % t.keyboardCols

@@ -34,43 +34,51 @@ var AZ09 = []rune{
 	'4', '5', '6', '7', '8', '9',
 }
 
+type CapsBehaviour int
+
+const (
+	CapsBehaviourNormal CapsBehaviour = iota
+	CapsBehaviourDisable
+	CapsBehaviourNames
+)
+
 type TextInput struct {
-	value              string
-	label              string
-	cursorRow          int
-	cursorCol          int
-	maxLength          int
-	controller         controller.Controller
-	callback           func(string)
-	validation         func(string) error
-	error              error
-	availableChars     []rune
-	keyboardGrid       [][]*KeyboardKey
-	spaceAvailable     bool
-	keyboardCols       int
-	keyboardRows       int
-	textColour         color.Color
-	capsMode           bool
-	nameCapitalisation bool
+	value          string
+	label          string
+	cursorRow      int
+	cursorCol      int
+	maxLength      int
+	controller     controller.Controller
+	callback       func(string)
+	validation     func(string) error
+	error          error
+	availableChars []rune
+	keyboardGrid   [][]*KeyboardKey
+	spaceAvailable bool
+	keyboardCols   int
+	keyboardRows   int
+	textColour     color.Color
+	capsMode       bool
+	capsBehaviour  CapsBehaviour
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
 	t := &TextInput{
-		value:              "",
-		label:              "",
-		cursorRow:          0,
-		cursorCol:          1, // row 0 col 1 -> SPACE key
-		maxLength:          24,
-		controller:         controller,
-		callback:           func(string) {},
-		validation:         nil,
-		error:              nil,
-		availableChars:     AZ09,
-		spaceAvailable:     true,
-		keyboardCols:       GetMinKeyCols(true),
-		textColour:         color.White,
-		capsMode:           false,
-		nameCapitalisation: false,
+		value:          "",
+		label:          "",
+		cursorRow:      0,
+		cursorCol:      1, // row 0 col 1 -> SPACE key
+		maxLength:      24,
+		controller:     controller,
+		callback:       func(string) {},
+		validation:     nil,
+		error:          nil,
+		availableChars: AZ09,
+		spaceAvailable: true,
+		keyboardCols:   getMinKeyCols(true, CapsBehaviourNormal),
+		textColour:     color.White,
+		capsMode:       false,
+		capsBehaviour:  CapsBehaviourNormal,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -78,6 +86,7 @@ func NewTextInput(controller controller.Controller) *TextInput {
 
 func (t *TextInput) WithValue(value string) *TextInput {
 	t.value = value
+	t.updateCaps()
 	return t
 }
 
@@ -125,8 +134,9 @@ func (t *TextInput) WithCapsMode(capsMode bool) *TextInput {
 	return t
 }
 
-func (t *TextInput) WithNameCapitalisation(nameCapitalisation bool) *TextInput {
-	t.nameCapitalisation = nameCapitalisation
+func (t *TextInput) WithCapsBehaviour(capsBehaviour CapsBehaviour) *TextInput {
+	t.capsBehaviour = capsBehaviour
+	t.updateCaps()
 	return t
 }
 
@@ -141,7 +151,7 @@ func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 }
 
 func (t *TextInput) initKeyboardGrid() {
-	if t.keyboardCols < GetMinKeyCols(t.spaceAvailable) {
+	if t.keyboardCols < getMinKeyCols(t.spaceAvailable, t.capsBehaviour) {
 		panic("not enough keyboard cols")
 	}
 	// TODO validate we don't mix upper and lower case in the layout
@@ -168,33 +178,40 @@ func (t *TextInput) initKeyboardGrid() {
 		}
 	}
 
+	col := 1
 	// Add special keys
-	t.keyboardGrid[0][1] = &KeyboardKey{
+	t.keyboardGrid[0][col] = &KeyboardKey{
 		char:       0,
 		special:    SpecialKeyEnter,
 		displayStr: "ENTER",
 	}
+	col = col + 2
 
-	t.keyboardGrid[0][3] = &KeyboardKey{
+	t.keyboardGrid[0][col] = &KeyboardKey{
 		char:       0,
 		special:    SpecialKeyClear,
 		displayStr: "CLEAR",
 	}
+	col = col + 2
 
-	t.keyboardGrid[0][5] = &KeyboardKey{
+	t.keyboardGrid[0][col] = &KeyboardKey{
 		char:       0,
 		special:    SpecialKeyDel,
 		displayStr: "DEL",
 	}
+	col = col + 2
 
-	t.keyboardGrid[0][7] = &KeyboardKey{
-		char:       0,
-		special:    SpecialKeyCaps,
-		displayStr: "CAPS",
+	if t.capsBehaviour != CapsBehaviourDisable {
+		t.keyboardGrid[0][col] = &KeyboardKey{
+			char:       0,
+			special:    SpecialKeyCaps,
+			displayStr: "CAPS",
+		}
+		col = col + 2
 	}
 
 	if t.spaceAvailable {
-		t.keyboardGrid[0][9] = &KeyboardKey{
+		t.keyboardGrid[0][col] = &KeyboardKey{
 			char:       ' ',
 			special:    SpecialKeySpace,
 			displayStr: "SPACE",
@@ -202,11 +219,14 @@ func (t *TextInput) initKeyboardGrid() {
 	}
 }
 
-func GetMinKeyCols(spaceAvailable bool) int {
+func getMinKeyCols(spaceAvailable bool, capsBehaviour CapsBehaviour) int {
 	// Special keys go in the first row and are separated by
 	// empty spaces (nil keys) from each other.
 	// Outermost keys are not placed at the edge.
 	minCols := int(specialKeyCount)*2 + 1
+	if capsBehaviour == CapsBehaviourDisable {
+		minCols = minCols - 2
+	}
 	if !spaceAvailable {
 		minCols = minCols - 2
 	}

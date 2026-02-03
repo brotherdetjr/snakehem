@@ -3,7 +3,6 @@ package textinput
 import (
 	"math"
 	"snakehem/util"
-	"unicode"
 )
 
 func (t *TextInput) Update() {
@@ -36,31 +35,21 @@ func (t *TextInput) Submit() {
 
 func (t *TextInput) Clear() {
 	t.value = ""
-	if t.nameCapitalisation {
-		t.WithCapsMode(true)
-	}
+	t.updateCaps()
 }
 
 func (t *TextInput) DeleteLastChar() {
 	if t.value != "" {
 		t.value = t.value[:len(t.value)-1]
 	}
-	if t.nameCapitalisation {
-		t.WithCapsMode(t.value == "" || t.value[len(t.value)-1] == ' ' || t.value[len(t.value)-1] == '-')
-	}
+	t.updateCaps()
 }
 
 func (t *TextInput) AddSelectedChar() {
 	key := t.getCurrentKey()
 	if key != nil && key.char != 0 && len(t.value) < t.maxLength {
 		t.value += string(key.char)
-		if t.nameCapitalisation {
-			if key.special == SpecialKeySpace || key.char == '-' {
-				t.WithCapsMode(true)
-			} else if unicode.IsUpper(key.char) {
-				t.WithCapsMode(false)
-			}
-		}
+		t.updateCaps()
 	}
 }
 
@@ -71,6 +60,12 @@ func (t *TextInput) ToggleCapsMode() {
 
 func (t *TextInput) GetCapsMode() bool {
 	return t.capsMode
+}
+
+func (t *TextInput) updateCaps() {
+	if t.capsBehaviour == CapsBehaviourNames {
+		t.WithCapsMode(t.value == "" || t.value[len(t.value)-1] == ' ' || t.value[len(t.value)-1] == '-')
+	}
 }
 
 func (t *TextInput) moveLeft() {

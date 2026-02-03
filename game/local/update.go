@@ -22,7 +22,7 @@ func (s *State) StagePlayerName(c controller.Controller, playerName string, colo
 		WithMaxLength(model.MaxNameLength).
 		WithTextColour(colour).
 		WithKeyboardCols(12).
-		WithNameCapitalisation(true).
+		WithCapsBehaviour(textinput.CapsBehaviourNames).
 		ValidateNotEmpty("name cannot be empty").
 		WithCallback(func(name string) {
 			cb(name)

@@ -35,40 +35,42 @@ var AZ09 = []rune{
 }
 
 type TextInput struct {
-	value          string
-	label          string
-	cursorRow      int
-	cursorCol      int
-	maxLength      int
-	controller     controller.Controller
-	callback       func(string)
-	validation     func(string) error
-	error          error
-	availableChars []rune
-	keyboardGrid   [][]*KeyboardKey
-	spaceAvailable bool
-	keyboardCols   int
-	keyboardRows   int
-	textColour     color.Color
-	capsMode       bool
+	value              string
+	label              string
+	cursorRow          int
+	cursorCol          int
+	maxLength          int
+	controller         controller.Controller
+	callback           func(string)
+	validation         func(string) error
+	error              error
+	availableChars     []rune
+	keyboardGrid       [][]*KeyboardKey
+	spaceAvailable     bool
+	keyboardCols       int
+	keyboardRows       int
+	textColour         color.Color
+	capsMode           bool
+	nameCapitalisation bool
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
 	t := &TextInput{
-		value:          "",
-		label:          "",
-		cursorRow:      0,
-		cursorCol:      1, // row 0 col 1 -> SPACE key
-		maxLength:      24,
-		controller:     controller,
-		callback:       func(string) {},
-		validation:     nil,
-		error:          nil,
-		availableChars: AZ09,
-		spaceAvailable: true,
-		keyboardCols:   GetMinKeyCols(true),
-		textColour:     color.White,
-		capsMode:       false,
+		value:              "",
+		label:              "",
+		cursorRow:          0,
+		cursorCol:          1, // row 0 col 1 -> SPACE key
+		maxLength:          24,
+		controller:         controller,
+		callback:           func(string) {},
+		validation:         nil,
+		error:              nil,
+		availableChars:     AZ09,
+		spaceAvailable:     true,
+		keyboardCols:       GetMinKeyCols(true),
+		textColour:         color.White,
+		capsMode:           false,
+		nameCapitalisation: false,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -123,6 +125,11 @@ func (t *TextInput) WithCapsMode(capsMode bool) *TextInput {
 	return t
 }
 
+func (t *TextInput) WithNameCapitalisation(nameCapitalisation bool) *TextInput {
+	t.nameCapitalisation = nameCapitalisation
+	return t
+}
+
 func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 	t.validation = func(text string) error {
 		if strings.TrimSpace(t.value) == "" {
@@ -137,6 +144,7 @@ func (t *TextInput) initKeyboardGrid() {
 	if t.keyboardCols < GetMinKeyCols(t.spaceAvailable) {
 		panic("not enough keyboard cols")
 	}
+	// TODO validate we don't mix upper and lower case in the layout
 
 	// Map regular characters from AvailableChars to grid
 	t.keyboardRows = int(math.Ceil(float64(len(t.availableChars))/float64(t.keyboardCols)) + 1)

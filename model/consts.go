@@ -8,7 +8,7 @@ const (
 	ControllerRepeatIntervalHz = 7
 	ControllerRepeatPeriod     = Tps / ControllerRepeatIntervalHz
 
-	MaxNameLength                 = 8
+	MaxNameLength                 = 9
 	CountdownSeconds              = 4
 	SnakeTargetLength             = 50
 	HealthReductionPerBite        = 10

@@ -5,6 +5,7 @@ import (
 	"snakehem/assets/pxterm16"
 	"snakehem/assets/pxterm24"
 	"snakehem/game/common"
+	"snakehem/util"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,15 +13,7 @@ import (
 )
 
 func (t *TextInput) Draw(screen *ebiten.Image) {
-	// Draw semi-transparent overlay
-	c := colornames.Darkolivegreen
-	bg := color.RGBA{
-		R: c.R,
-		G: c.G,
-		B: c.B,
-		A: 200,
-	}
-	screen.Fill(bg)
+	screen.Fill(colornames.Darkolivegreen)
 
 	// Draw title
 	titleY := common.GridDimPx / 4.0
@@ -33,11 +26,18 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 	)
 
 	// Draw current name being entered
-	currentNameY := common.GridDimPx / 2.5
+	currentNameY := common.GridDimPx / 2.7
 	common.DrawTextCentered(
 		screen,
-		t.value,
+		"["+util.PadRight(t.value, t.maxLength)+"]",
 		colornames.White,
+		currentNameY,
+		pxterm24.Font,
+	)
+	common.DrawTextCentered(
+		screen,
+		"["+util.PadRight("", t.maxLength)+"]",
+		colornames.Orange,
 		currentNameY,
 		pxterm24.Font,
 	)

@@ -5,7 +5,7 @@ const (
 	TpsMultiplier              = 6
 	Tps                        = GameSpeedFps * TpsMultiplier
 	GridSize                   = 63
-	ControllerRepeatIntervalHz = 7
+	ControllerRepeatIntervalHz = 5
 	ControllerRepeatPeriod     = Tps / ControllerRepeatIntervalHz
 
 	MaxNameLength                 = 9

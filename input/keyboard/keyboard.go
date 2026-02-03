@@ -2,7 +2,6 @@ package keyboard
 
 import (
 	"snakehem/input/controller"
-	"snakehem/model"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,7 +24,7 @@ func (k keyboard) IsAnyJustPressed() bool {
 }
 
 func (k keyboard) IsAnyPressed() bool {
-	return k.IsUpPressed() || k.IsDownPressed() || k.IsLeftPressed() ||
+	return k.IsAnyJustPressed() || k.IsUpPressed() || k.IsDownPressed() || k.IsLeftPressed() ||
 		k.IsRightPressed() || k.IsStartPressed() || k.IsExitPressed()
 }
 
@@ -34,10 +33,7 @@ func (k keyboard) IsUpJustPressed() bool {
 }
 
 func (k keyboard) IsUpPressed() bool {
-	durArrowUp := inpututil.KeyPressDuration(ebiten.KeyArrowUp)
-	durNumpad8 := inpututil.KeyPressDuration(ebiten.KeyNumpad8)
-	return durArrowUp > 0 && durArrowUp%model.ControllerRepeatPeriod == 0 ||
-		durNumpad8 > 0 && durNumpad8%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyArrowUp, ebiten.KeyNumpad8)
 }
 
 func (k keyboard) IsDownJustPressed() bool {
@@ -45,10 +41,7 @@ func (k keyboard) IsDownJustPressed() bool {
 }
 
 func (k keyboard) IsDownPressed() bool {
-	durArrowDown := inpututil.KeyPressDuration(ebiten.KeyArrowDown)
-	durNumpad2 := inpututil.KeyPressDuration(ebiten.KeyNumpad2)
-	return durArrowDown > 0 && durArrowDown%model.ControllerRepeatPeriod == 0 ||
-		durNumpad2 > 0 && durNumpad2%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyArrowDown, ebiten.KeyNumpad2)
 }
 
 func (k keyboard) IsLeftJustPressed() bool {
@@ -56,10 +49,7 @@ func (k keyboard) IsLeftJustPressed() bool {
 }
 
 func (k keyboard) IsLeftPressed() bool {
-	durArrowLeft := inpututil.KeyPressDuration(ebiten.KeyArrowLeft)
-	durNumpad4 := inpututil.KeyPressDuration(ebiten.KeyNumpad4)
-	return durArrowLeft > 0 && durArrowLeft%model.ControllerRepeatPeriod == 0 ||
-		durNumpad4 > 0 && durNumpad4%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyArrowLeft, ebiten.KeyNumpad4)
 }
 
 func (k keyboard) IsRightJustPressed() bool {
@@ -67,10 +57,7 @@ func (k keyboard) IsRightJustPressed() bool {
 }
 
 func (k keyboard) IsRightPressed() bool {
-	durArrowRight := inpututil.KeyPressDuration(ebiten.KeyArrowRight)
-	durNumpad6 := inpututil.KeyPressDuration(ebiten.KeyNumpad6)
-	return durArrowRight > 0 && durArrowRight%model.ControllerRepeatPeriod == 0 ||
-		durNumpad6 > 0 && durNumpad6%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyArrowRight, ebiten.KeyNumpad6)
 }
 
 func (k keyboard) IsExitJustPressed() bool {
@@ -78,8 +65,7 @@ func (k keyboard) IsExitJustPressed() bool {
 }
 
 func (k keyboard) IsExitPressed() bool {
-	durEscape := inpututil.KeyPressDuration(ebiten.KeyEscape)
-	return durEscape > 0 && durEscape%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyEscape)
 }
 
 func (k keyboard) IsStartJustPressed() bool {
@@ -88,12 +74,7 @@ func (k keyboard) IsStartJustPressed() bool {
 }
 
 func (k keyboard) IsStartPressed() bool {
-	durSpace := inpututil.KeyPressDuration(ebiten.KeySpace)
-	durEnter := inpututil.KeyPressDuration(ebiten.KeyEnter)
-	durNumpadEnter := inpututil.KeyPressDuration(ebiten.KeyNumpadEnter)
-	return durSpace > 0 && durSpace%model.ControllerRepeatPeriod == 0 ||
-		durEnter > 0 && durEnter%model.ControllerRepeatPeriod == 0 ||
-		durNumpadEnter > 0 && durNumpadEnter%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeySpace, ebiten.KeyEnter, ebiten.KeyNumpadEnter)
 }
 
 func (k keyboard) Vibrate(_ time.Duration) {

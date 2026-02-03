@@ -2,7 +2,6 @@ package keyboardwasd
 
 import (
 	"snakehem/input/controller"
-	"snakehem/model"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,7 +24,7 @@ func (k keyboardWasd) IsAnyJustPressed() bool {
 }
 
 func (k keyboardWasd) IsAnyPressed() bool {
-	return k.IsUpPressed() || k.IsDownPressed() || k.IsLeftPressed() ||
+	return k.IsAnyJustPressed() || k.IsUpPressed() || k.IsDownPressed() || k.IsLeftPressed() ||
 		k.IsRightPressed() || k.IsStartPressed() || k.IsExitPressed()
 }
 
@@ -34,8 +33,7 @@ func (k keyboardWasd) IsUpJustPressed() bool {
 }
 
 func (k keyboardWasd) IsUpPressed() bool {
-	durW := inpututil.KeyPressDuration(ebiten.KeyW)
-	return durW > 0 && durW%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyW)
 }
 
 func (k keyboardWasd) IsDownJustPressed() bool {
@@ -43,8 +41,7 @@ func (k keyboardWasd) IsDownJustPressed() bool {
 }
 
 func (k keyboardWasd) IsDownPressed() bool {
-	durS := inpututil.KeyPressDuration(ebiten.KeyS)
-	return durS > 0 && durS%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyS)
 }
 
 func (k keyboardWasd) IsLeftJustPressed() bool {
@@ -52,8 +49,7 @@ func (k keyboardWasd) IsLeftJustPressed() bool {
 }
 
 func (k keyboardWasd) IsLeftPressed() bool {
-	durA := inpututil.KeyPressDuration(ebiten.KeyA)
-	return durA > 0 && durA%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyA)
 }
 
 func (k keyboardWasd) IsRightJustPressed() bool {
@@ -61,8 +57,7 @@ func (k keyboardWasd) IsRightJustPressed() bool {
 }
 
 func (k keyboardWasd) IsRightPressed() bool {
-	durD := inpututil.KeyPressDuration(ebiten.KeyD)
-	return durD > 0 && durD%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyD)
 }
 
 func (k keyboardWasd) IsExitJustPressed() bool {
@@ -70,8 +65,7 @@ func (k keyboardWasd) IsExitJustPressed() bool {
 }
 
 func (k keyboardWasd) IsExitPressed() bool {
-	durGraveAccent := inpututil.KeyPressDuration(ebiten.KeyGraveAccent)
-	return durGraveAccent > 0 && durGraveAccent%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyGraveAccent)
 }
 
 func (k keyboardWasd) IsStartJustPressed() bool {
@@ -79,8 +73,7 @@ func (k keyboardWasd) IsStartJustPressed() bool {
 }
 
 func (k keyboardWasd) IsStartPressed() bool {
-	durTab := inpututil.KeyPressDuration(ebiten.KeyTab)
-	return durTab > 0 && durTab%model.ControllerRepeatPeriod == 0
+	return controller.IsRepeatingKeyboard(ebiten.KeyTab)
 }
 
 func (k keyboardWasd) Vibrate(_ time.Duration) {

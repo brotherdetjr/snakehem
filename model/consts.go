@@ -7,6 +7,7 @@ const (
 	GridSize                   = 63
 	ControllerRepeatIntervalHz = 5
 	ControllerRepeatPeriod     = Tps / ControllerRepeatIntervalHz
+	ControllerCoolOffPeriod    = ControllerRepeatPeriod * 2
 
 	MaxNameLength                 = 9
 	CountdownSeconds              = 4

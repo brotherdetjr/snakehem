@@ -2,9 +2,11 @@ package textinput
 
 import (
 	"errors"
+	"image/color"
 	"math"
 	"snakehem/input/controller"
 	"strings"
+	"unicode"
 )
 
 type SpecialKey int
@@ -15,6 +17,8 @@ const (
 	SpecialKeyClear
 	SpecialKeyDel
 	SpecialKeySpace
+	SpecialKeyCaps
+	specialKeyCount = iota - 1 // SpecialKeyNone doesn't count
 )
 
 type KeyboardKey struct {
@@ -24,9 +28,9 @@ type KeyboardKey struct {
 }
 
 var AZ09 = []rune{
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-	'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+	'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
 	'4', '5', '6', '7', '8', '9',
 }
 
@@ -45,6 +49,8 @@ type TextInput struct {
 	spaceAvailable bool
 	keyboardCols   int
 	keyboardRows   int
+	textColour     color.Color
+	capsMode       bool
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
@@ -60,7 +66,9 @@ func NewTextInput(controller controller.Controller) *TextInput {
 		error:          nil,
 		availableChars: AZ09,
 		spaceAvailable: true,
-		keyboardCols:   10,
+		keyboardCols:   GetMinKeyCols(true),
+		textColour:     color.White,
+		capsMode:       false,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -98,6 +106,23 @@ func (t *TextInput) WithSpaceAvailable(spaceAvailable bool) *TextInput {
 	return t
 }
 
+func (t *TextInput) WithKeyboardCols(keyboardCols int) *TextInput {
+	t.keyboardCols = keyboardCols
+	t.initKeyboardGrid()
+	return t
+}
+
+func (t *TextInput) WithTextColour(textColour color.Color) *TextInput {
+	t.textColour = textColour
+	return t
+}
+
+func (t *TextInput) WithCapsMode(capsMode bool) *TextInput {
+	t.capsMode = capsMode
+	t.initKeyboardGrid()
+	return t
+}
+
 func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 	t.validation = func(text string) error {
 		if strings.TrimSpace(t.value) == "" {
@@ -109,6 +134,10 @@ func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 }
 
 func (t *TextInput) initKeyboardGrid() {
+	if t.keyboardCols < GetMinKeyCols(t.spaceAvailable) {
+		panic("not enough keyboard cols")
+	}
+
 	// Map regular characters from AvailableChars to grid
 	t.keyboardRows = int(math.Ceil(float64(len(t.availableChars))/float64(t.keyboardCols)) + 1)
 	t.keyboardGrid = make([][]*KeyboardKey, t.keyboardRows)
@@ -117,6 +146,9 @@ func (t *TextInput) initKeyboardGrid() {
 	}
 
 	for i, char := range t.availableChars {
+		if t.capsMode {
+			char = unicode.ToUpper(char)
+		}
 		row := i/t.keyboardCols + 1
 		col := i % t.keyboardCols
 		if row < t.keyboardRows && col < t.keyboardCols {
@@ -147,11 +179,28 @@ func (t *TextInput) initKeyboardGrid() {
 		displayStr: "DEL",
 	}
 
+	t.keyboardGrid[0][7] = &KeyboardKey{
+		char:       0,
+		special:    SpecialKeyCaps,
+		displayStr: "CAPS",
+	}
+
 	if t.spaceAvailable {
-		t.keyboardGrid[0][7] = &KeyboardKey{
+		t.keyboardGrid[0][9] = &KeyboardKey{
 			char:       ' ',
 			special:    SpecialKeySpace,
 			displayStr: "SPACE",
 		}
 	}
+}
+
+func GetMinKeyCols(spaceAvailable bool) int {
+	// Special keys go in the first row and are separated by
+	// empty spaces (nil keys) from each other.
+	// Outermost keys are not placed at the edge.
+	minCols := int(specialKeyCount)*2 + 1
+	if !spaceAvailable {
+		minCols = minCols - 2
+	}
+	return minCols
 }

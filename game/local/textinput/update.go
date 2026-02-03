@@ -18,7 +18,9 @@ func (t *TextInput) Update() {
 		t.moveLeft()
 	} else if c.IsRightPressed() {
 		t.moveRight()
-	} else if c.IsStartJustPressed() {
+	} else if k := t.getCurrentKey(); k != nil && k.special == SpecialKeyEnter && c.IsStartJustPressed() {
+		t.Submit()
+	} else if c.IsStartPressed() {
 		t.pressCurrentKey()
 	}
 }
@@ -46,6 +48,15 @@ func (t *TextInput) AddSelectedChar() {
 	if key != nil && key.char != 0 && len(t.value) < t.maxLength {
 		t.value += string(key.char)
 	}
+}
+
+func (t *TextInput) ToggleCapsMode() {
+	t.capsMode = !t.capsMode
+	t.initKeyboardGrid()
+}
+
+func (t *TextInput) GetCapsMode() bool {
+	return t.capsMode
 }
 
 func (t *TextInput) moveLeft() {
@@ -123,11 +134,14 @@ func (t *TextInput) pressCurrentKey() {
 
 	switch key.special {
 	case SpecialKeyEnter:
-		t.Submit()
+		// SpecialKeyEnter is handled specially to
+		// prevent accidental submission
 	case SpecialKeyClear:
 		t.Clear()
 	case SpecialKeyDel:
 		t.DeleteLastChar()
+	case SpecialKeyCaps:
+		t.ToggleCapsMode()
 	default:
 		// Regular character
 		t.AddSelectedChar()

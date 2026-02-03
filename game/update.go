@@ -186,6 +186,7 @@ func (g *Game) updateHeadCount() {
 					g.localState.StagePlayerName(
 						c,
 						"Player "+string(rune('0'+(snakeCount+1))),
+						common.SnakeColours[snakeCount],
 						func(s string) {
 							// Submit name and join game
 							snakes := g.sharedState.Snakes

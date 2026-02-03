@@ -30,7 +30,7 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 	common.DrawTextCentered(
 		screen,
 		"["+util.PadRight(t.value, t.maxLength)+"]",
-		colornames.White,
+		t.textColour,
 		currentNameY,
 		pxterm24.Font,
 	)
@@ -59,8 +59,8 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 }
 
 func (t *TextInput) drawKeyboardGrid(screen *ebiten.Image, startY float64) {
-	const keySpacingX = 70 // Horizontal spacing between keys
-	const keySpacingY = 32 // Vertical spacing between rows
+	var keySpacingX = common.GridDimPx / t.keyboardCols // Horizontal spacing between keys
+	const keySpacingY = 32                              // Vertical spacing between rows
 
 	// Calculate grid dimensions
 	totalGridWidth := (t.keyboardCols - 1) * keySpacingX

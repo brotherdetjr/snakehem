@@ -33,7 +33,7 @@ func IsRepeatingGamepad(id ebiten.GamepadID, buttons ...ebiten.StandardGamepadBu
 			return true
 		}
 		dur := inpututil.StandardGamepadButtonPressDuration(id, btn)
-		if dur > 0 && dur%model.ControllerRepeatPeriod == 0 {
+		if dur > model.ControllerCoolOffPeriod && dur%model.ControllerRepeatPeriod == 0 {
 			return true
 		}
 	}
@@ -46,7 +46,7 @@ func IsRepeatingKeyboard(keys ...ebiten.Key) bool {
 			return true
 		}
 		dur := inpututil.KeyPressDuration(key)
-		if dur > 0 && dur%model.ControllerRepeatPeriod == 0 {
+		if dur > model.ControllerCoolOffPeriod && dur%model.ControllerRepeatPeriod == 0 {
 			return true
 		}
 	}

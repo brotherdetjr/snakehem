@@ -10,13 +10,13 @@ func (t *TextInput) Update() {
 	if c.IsAnyJustPressed() {
 		t.error = nil
 	}
-	if c.IsUpJustPressed() {
+	if c.IsUpPressed() {
 		t.moveUp()
-	} else if c.IsDownJustPressed() {
+	} else if c.IsDownPressed() {
 		t.moveDown()
-	} else if c.IsLeftJustPressed() {
+	} else if c.IsLeftPressed() {
 		t.moveLeft()
-	} else if c.IsRightJustPressed() {
+	} else if c.IsRightPressed() {
 		t.moveRight()
 	} else if c.IsStartJustPressed() {
 		t.pressCurrentKey()

@@ -45,8 +45,8 @@ func (g Gamepad) IsUpPressed() bool {
 	id := ebiten.GamepadID(g)
 	durRightTop := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonRightTop)
 	durLeftTop := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonLeftTop)
-	return durRightTop > 0 && durRightTop%model.TpsMultiplier == 0 ||
-		durLeftTop > 0 && durLeftTop%model.TpsMultiplier == 0
+	return durRightTop > 0 && durRightTop%model.ControllerRepeatPeriod == 0 ||
+		durLeftTop > 0 && durLeftTop%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) IsDownJustPressed() bool {
@@ -59,8 +59,8 @@ func (g Gamepad) IsDownPressed() bool {
 	id := ebiten.GamepadID(g)
 	durRightBottom := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonRightBottom)
 	durLeftBottom := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonLeftBottom)
-	return durRightBottom > 0 && durRightBottom%model.TpsMultiplier == 0 ||
-		durLeftBottom > 0 && durLeftBottom%model.TpsMultiplier == 0
+	return durRightBottom > 0 && durRightBottom%model.ControllerRepeatPeriod == 0 ||
+		durLeftBottom > 0 && durLeftBottom%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) IsLeftJustPressed() bool {
@@ -73,8 +73,8 @@ func (g Gamepad) IsLeftPressed() bool {
 	id := ebiten.GamepadID(g)
 	durRightLeft := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonRightLeft)
 	durLeftLeft := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonLeftLeft)
-	return durRightLeft > 0 && durRightLeft%model.TpsMultiplier == 0 ||
-		durLeftLeft > 0 && durLeftLeft%model.TpsMultiplier == 0
+	return durRightLeft > 0 && durRightLeft%model.ControllerRepeatPeriod == 0 ||
+		durLeftLeft > 0 && durLeftLeft%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) IsRightJustPressed() bool {
@@ -87,8 +87,8 @@ func (g Gamepad) IsRightPressed() bool {
 	id := ebiten.GamepadID(g)
 	durRightRight := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonRightRight)
 	durLeftRight := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonLeftRight)
-	return durRightRight > 0 && durRightRight%model.TpsMultiplier == 0 ||
-		durLeftRight > 0 && durLeftRight%model.TpsMultiplier == 0
+	return durRightRight > 0 && durRightRight%model.ControllerRepeatPeriod == 0 ||
+		durLeftRight > 0 && durLeftRight%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) IsExitJustPressed() bool {
@@ -98,7 +98,7 @@ func (g Gamepad) IsExitJustPressed() bool {
 func (g Gamepad) IsExitPressed() bool {
 	id := ebiten.GamepadID(g)
 	dur := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonCenterLeft)
-	return dur > 0 && dur%model.TpsMultiplier == 0
+	return dur > 0 && dur%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) IsStartJustPressed() bool {
@@ -108,7 +108,7 @@ func (g Gamepad) IsStartJustPressed() bool {
 func (g Gamepad) IsStartPressed() bool {
 	id := ebiten.GamepadID(g)
 	dur := inpututil.StandardGamepadButtonPressDuration(id, ebiten.StandardGamepadButtonCenterRight)
-	return dur > 0 && dur%model.TpsMultiplier == 0
+	return dur > 0 && dur%model.ControllerRepeatPeriod == 0
 }
 
 func (g Gamepad) Vibrate(duration time.Duration) {

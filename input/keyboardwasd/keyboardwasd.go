@@ -35,7 +35,7 @@ func (k keyboardWasd) IsUpJustPressed() bool {
 
 func (k keyboardWasd) IsUpPressed() bool {
 	durW := inpututil.KeyPressDuration(ebiten.KeyW)
-	return durW > 0 && durW%model.TpsMultiplier == 0
+	return durW > 0 && durW%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) IsDownJustPressed() bool {
@@ -44,7 +44,7 @@ func (k keyboardWasd) IsDownJustPressed() bool {
 
 func (k keyboardWasd) IsDownPressed() bool {
 	durS := inpututil.KeyPressDuration(ebiten.KeyS)
-	return durS > 0 && durS%model.TpsMultiplier == 0
+	return durS > 0 && durS%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) IsLeftJustPressed() bool {
@@ -53,7 +53,7 @@ func (k keyboardWasd) IsLeftJustPressed() bool {
 
 func (k keyboardWasd) IsLeftPressed() bool {
 	durA := inpututil.KeyPressDuration(ebiten.KeyA)
-	return durA > 0 && durA%model.TpsMultiplier == 0
+	return durA > 0 && durA%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) IsRightJustPressed() bool {
@@ -62,7 +62,7 @@ func (k keyboardWasd) IsRightJustPressed() bool {
 
 func (k keyboardWasd) IsRightPressed() bool {
 	durD := inpututil.KeyPressDuration(ebiten.KeyD)
-	return durD > 0 && durD%model.TpsMultiplier == 0
+	return durD > 0 && durD%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) IsExitJustPressed() bool {
@@ -71,7 +71,7 @@ func (k keyboardWasd) IsExitJustPressed() bool {
 
 func (k keyboardWasd) IsExitPressed() bool {
 	durGraveAccent := inpututil.KeyPressDuration(ebiten.KeyGraveAccent)
-	return durGraveAccent > 0 && durGraveAccent%model.TpsMultiplier == 0
+	return durGraveAccent > 0 && durGraveAccent%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) IsStartJustPressed() bool {
@@ -80,7 +80,7 @@ func (k keyboardWasd) IsStartJustPressed() bool {
 
 func (k keyboardWasd) IsStartPressed() bool {
 	durTab := inpututil.KeyPressDuration(ebiten.KeyTab)
-	return durTab > 0 && durTab%model.TpsMultiplier == 0
+	return durTab > 0 && durTab%model.ControllerRepeatPeriod == 0
 }
 
 func (k keyboardWasd) Vibrate(_ time.Duration) {

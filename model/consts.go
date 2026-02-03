@@ -1,10 +1,12 @@
 package model
 
 const (
-	GameSpeedFps  = 10
-	TpsMultiplier = 6
-	Tps           = GameSpeedFps * TpsMultiplier
-	GridSize      = 63
+	GameSpeedFps               = 10
+	TpsMultiplier              = 6
+	Tps                        = GameSpeedFps * TpsMultiplier
+	GridSize                   = 63
+	ControllerRepeatIntervalHz = 7
+	ControllerRepeatPeriod     = Tps / ControllerRepeatIntervalHz
 
 	MaxNameLength                 = 8
 	CountdownSeconds              = 4

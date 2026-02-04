@@ -150,6 +150,47 @@ func (t *TextInput) ValidateNotEmpty(msg string) *TextInput {
 	return t
 }
 
+func (t *TextInput) GetCurrentKey() *KeyboardKey {
+	return t.keyboardGrid[t.cursorRow][t.cursorCol]
+}
+
+func (t *TextInput) Submit() {
+	if err := t.validation(t.value); err != nil {
+		t.error = err
+	} else {
+		t.callback(t.value)
+	}
+}
+
+func (t *TextInput) Clear() {
+	t.value = ""
+	t.updateCaps()
+}
+
+func (t *TextInput) DeleteLastChar() {
+	if t.value != "" {
+		t.value = t.value[:len(t.value)-1]
+		t.updateCaps()
+	}
+}
+
+func (t *TextInput) AddSelectedChar() {
+	key := t.GetCurrentKey()
+	if key != nil && key.char != 0 && len(t.value) < t.maxLength {
+		t.value += string(key.char)
+		t.updateCaps()
+	}
+}
+
+func (t *TextInput) ToggleCapsMode() {
+	t.capsMode = !t.capsMode
+	t.initKeyboardGrid()
+}
+
+func (t *TextInput) GetCapsMode() bool {
+	return t.capsMode
+}
+
 func (t *TextInput) initKeyboardGrid() {
 	if t.keyboardCols < getMinKeyCols(t.spaceAvailable, t.capsBehaviour) {
 		panic("not enough keyboard cols")

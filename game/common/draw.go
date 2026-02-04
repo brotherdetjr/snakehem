@@ -26,14 +26,14 @@ const (
 
 var SnakeColours = [model.MaxSnakes]color.Color{
 	colornames.Lightgrey,
-	color.NRGBA{
+	color.NRGBA{ // orange
 		R: 255,
 		G: 128,
 		B: 10,
 		A: 255,
 	},
 	colornames.Yellow,
-	color.NRGBA{
+	color.NRGBA{ // dark green
 		R: 100,
 		G: 170,
 		B: 0,
@@ -41,13 +41,13 @@ var SnakeColours = [model.MaxSnakes]color.Color{
 	},
 	colornames.Cyan,
 	colornames.Blue,
-	color.NRGBA{
+	color.NRGBA{ // dark blue
 		R: 0,
 		G: 0,
 		B: 100,
 		A: 255,
 	},
-	color.NRGBA{
+	color.NRGBA{ // dark magenta
 		R: 100,
 		G: 0,
 		B: 84,

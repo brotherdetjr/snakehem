@@ -9,7 +9,7 @@ import (
 )
 
 func (t *TextInput) Update(ctx *common.Context) {
-	t.cursorShown = ctx.TickCount/int64(model.Tps/t.cursorBlinkHz)%2 == 0
+	t.cursorShown = ctx.Tick/int64(model.Tps/t.cursorBlinkHz)%2 == 0
 	c := t.controller
 	if c.IsAnyJustPressed() {
 		t.error = nil

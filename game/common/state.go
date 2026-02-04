@@ -1,5 +1,5 @@
 package common
 
 type Context struct {
-	TickCount int64
+	Tick int64
 }

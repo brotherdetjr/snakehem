@@ -25,7 +25,7 @@ func (g *Game) Update() error {
 	if keyboard.Instance.IsExitJustPressed() {
 		os.Exit(0)
 	}
-	g.localState.Update(&common.Context{TickCount: ebiten.Tick()})
+	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
 	switch g.sharedState.Stage {
 	case shared.Lobby:
 		g.updateHeadCount()

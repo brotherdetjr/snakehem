@@ -18,6 +18,12 @@ import (
 	"golang.org/x/image/colornames"
 )
 
+const (
+	MaxScoresAtTop = 5
+	EyeRadiusPx    = 2
+	EyeGapPx       = 3
+)
+
 func (p *State) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
 	drawItems(p, screen)
@@ -60,7 +66,7 @@ func (p *State) Draw(screen *ebiten.Image) {
 		}
 	case Action:
 		if p.FadeCountdown > 0 {
-			vector.DrawFilledRect(
+			vector.FillRect(
 				screen,
 				0,
 				0,
@@ -93,7 +99,7 @@ func drawItems(p *State, screen *ebiten.Image) {
 					s := p.Snakes[item.SnakeId]
 					shrink := (1 - float32(item.HealthPercent)/100) * common.CellDimPx * 0.5
 					if item != s.Links[0] || p.Countdown > 0 {
-						vector.DrawFilledRect(
+						vector.FillRect(
 							screen,
 							float32(item.X*common.CellDimPx)+shrink,
 							float32(item.Y*common.CellDimPx)+shrink,
@@ -106,46 +112,46 @@ func drawItems(p *State, screen *ebiten.Image) {
 						var x1, y1, x2, y2 float32
 						switch s.Direction {
 						case direction.Up:
-							x1 = float32(item.X*common.CellDimPx) + common.EyeGapPx
-							y1 = float32(item.Y*common.CellDimPx) + common.EyeGapPx
-							x2 = float32((item.X+1)*common.CellDimPx) - common.EyeGapPx
-							y2 = float32(item.Y*common.CellDimPx) + common.EyeGapPx
+							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
+							y1 = float32(item.Y*common.CellDimPx) + EyeGapPx
+							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
+							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
 						case direction.Down:
-							x1 = float32(item.X*common.CellDimPx) + common.EyeGapPx
-							y1 = float32((item.Y+1)*common.CellDimPx) - common.EyeGapPx
-							x2 = float32((item.X+1)*common.CellDimPx) - common.EyeGapPx
-							y2 = float32((item.Y+1)*common.CellDimPx) - common.EyeGapPx
+							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
+							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
+							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
+							y2 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
 						case direction.Left:
-							x1 = float32(item.X*common.CellDimPx) + common.EyeGapPx
-							y1 = float32((item.Y+1)*common.CellDimPx) - common.EyeGapPx
-							x2 = float32(item.X*common.CellDimPx) + common.EyeGapPx
-							y2 = float32(item.Y*common.CellDimPx) + common.EyeGapPx
+							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
+							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
+							x2 = float32(item.X*common.CellDimPx) + EyeGapPx
+							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
 						case direction.Right:
-							x1 = float32((item.X+1)*common.CellDimPx) - common.EyeGapPx
-							y1 = float32((item.Y+1)*common.CellDimPx) - common.EyeGapPx
-							x2 = float32((item.X+1)*common.CellDimPx) - common.EyeGapPx
-							y2 = float32(item.Y*common.CellDimPx) + common.EyeGapPx
+							x1 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
+							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
+							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
+							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
 						case direction.None:
 						}
 						if x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0 {
-							vector.DrawFilledCircle(
+							vector.FillCircle(
 								screen,
 								x1,
 								y1,
-								common.EyeRadiusPx,
+								EyeRadiusPx,
 								common.WithRedness(s.Colour, item.Redness),
 								false,
 							)
-							vector.DrawFilledCircle(
+							vector.FillCircle(
 								screen,
 								x2,
 								y2,
-								common.EyeRadiusPx,
+								EyeRadiusPx,
 								common.WithRedness(s.Colour, item.Redness),
 								false,
 							)
 						} else {
-							vector.DrawFilledRect(
+							vector.FillRect(
 								screen,
 								float32(item.X*common.CellDimPx),
 								float32(item.Y*common.CellDimPx),
@@ -157,7 +163,7 @@ func drawItems(p *State, screen *ebiten.Image) {
 						}
 					}
 				case *apple.Apple:
-					vector.DrawFilledRect(
+					vector.FillRect(
 						screen,
 						float32(item.X*common.CellDimPx),
 						float32(item.Y*common.CellDimPx),
@@ -175,8 +181,8 @@ func drawItems(p *State, screen *ebiten.Image) {
 func drawScores(p *State, screen *ebiten.Image) {
 	snakes := p.Snakes
 	scoresAtTop := len(snakes)
-	if scoresAtTop > common.MaxScoresAtTop {
-		scoresAtTop = common.MaxScoresAtTop
+	if scoresAtTop > MaxScoresAtTop {
+		scoresAtTop = MaxScoresAtTop
 	}
 	drawScoreRow(p, screen, snakes[:scoresAtTop], common.Pxterm24Height/2)
 	// when there are many players, not all scores can be fit in one line
@@ -185,9 +191,9 @@ func drawScores(p *State, screen *ebiten.Image) {
 
 func drawScoreRow(p *State, screen *ebiten.Image, snakes []*snake.Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
-	for i, snake := range snakes {
-		if p.Stage != Action || snake.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ActionFrameCount/(model.Tps/4))%2 > 0 {
-			txt, colour := scoreStrAndColourForIthSnake(p, snake)
+	for i, s := range snakes {
+		if p.Stage != Action || s.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ActionFrameCount/(model.Tps/4))%2 > 0 {
+			txt, colour := scoreStrAndColourForIthSnake(p, s)
 			x := int(span*float64(i) + span/2 - float64(pxterm24.Font.MeasureString(txt))/2 + 2)
 			pxterm24.Font.DrawString(screen, x, rowTopPos, txt, colour)
 		}
@@ -210,7 +216,7 @@ func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.C
 }
 
 func drawScoreboard(p *State, screen *ebiten.Image) {
-	vector.DrawFilledRect(
+	vector.FillRect(
 		screen,
 		0,
 		0,
@@ -264,16 +270,16 @@ func drawScoreboard(p *State, screen *ebiten.Image) {
 	slices.SortFunc(snakes, func(a, b *snake.Snake) int {
 		return b.Score - a.Score
 	})
-	for i, snake := range snakes {
+	for i, s := range snakes {
 		top := common.Pxterm24Height * 2 * (i + 3)
-		score := snake.Score
+		score := s.Score
 		if score > model.TargetScore {
 			score = model.TargetScore
 		}
 		common.DrawTextCentered(
 			screen,
-			fmt.Sprintf("%s "+common.ScoreFmt, snake.Name, score),
-			common.WithRedness(snake.Colour, snake.Links[0].Redness),
+			fmt.Sprintf("%s "+common.ScoreFmt, s.Name, score),
+			common.WithRedness(s.Colour, s.Links[0].Redness),
 			float64(top),
 			pxterm24.Font,
 		)

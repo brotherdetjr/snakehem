@@ -17,11 +17,8 @@ var Pxterm16Height = pxterm24.Font.GetHeight()
 var Pxterm24Height = pxterm24.Font.GetHeight()
 
 const (
-	CellDimPx      = 11
-	GridDimPx      = model.GridSize * CellDimPx
-	MaxScoresAtTop = 5
-	EyeRadiusPx    = 2
-	EyeGapPx       = 3
+	CellDimPx = 11
+	GridDimPx = model.GridSize * CellDimPx
 )
 
 var SnakeColours = [model.MaxSnakes]color.Color{
@@ -61,7 +58,12 @@ func DrawTextCentered(screen *ebiten.Image, txt string, colour color.Color, top 
 	font.DrawString(screen, (GridDimPx-txtWidth)/2, int(top), txt, colour)
 }
 
+// WithRedness transforms a given colour by add a red hue to it. redness argument
+// varies from 0 (keep the original colour) to 1 (make it fully red).
 func WithRedness(colour color.Color, redness float32) color.Color {
+	if redness < 0 || redness > 1 {
+		panic("redness must be between 0 and 1")
+	}
 	red, green, blue, _ := colour.RGBA()
 	r := float32(red >> 8)
 	g := float32(green >> 8)

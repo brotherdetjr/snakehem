@@ -2,11 +2,14 @@ package textinput
 
 import (
 	"math"
+	"snakehem/game/common"
+	"snakehem/model"
 	"snakehem/util"
 	"unicode"
 )
 
-func (t *TextInput) Update() {
+func (t *TextInput) Update(ctx *common.Context) {
+	t.cursorShown = ctx.TickCount/int64(model.Tps/t.cursorBlinkHz)%2 == 0
 	c := t.controller
 	if c.IsAnyJustPressed() {
 		t.error = nil

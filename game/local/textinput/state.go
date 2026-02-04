@@ -60,6 +60,8 @@ type TextInput struct {
 	textColour     color.Color
 	capsMode       bool
 	capsBehaviour  CapsBehaviour
+	cursorShown    bool
+	cursorBlinkHz  float64
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
@@ -79,6 +81,8 @@ func NewTextInput(controller controller.Controller) *TextInput {
 		textColour:     color.White,
 		capsMode:       false,
 		capsBehaviour:  CapsBehaviourNormal,
+		cursorShown:    false,
+		cursorBlinkHz:  2,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -96,6 +100,9 @@ func (t *TextInput) WithLabel(label string) *TextInput {
 }
 
 func (t *TextInput) WithMaxLength(maxLength int) *TextInput {
+	if maxLength < 0 || maxLength > 26 {
+		panic("invalid max length for TextInput. Must be between 0 and 26")
+	}
 	t.maxLength = maxLength
 	return t
 }
@@ -137,6 +144,11 @@ func (t *TextInput) WithCapsMode(capsMode bool) *TextInput {
 func (t *TextInput) WithCapsBehaviour(capsBehaviour CapsBehaviour) *TextInput {
 	t.capsBehaviour = capsBehaviour
 	t.updateCaps()
+	return t
+}
+
+func (t *TextInput) WithCursorBlinkHz(cursorBlinkHz float64) *TextInput {
+	t.cursorBlinkHz = cursorBlinkHz
 	return t
 }
 

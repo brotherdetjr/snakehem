@@ -23,7 +23,6 @@ type Game struct {
 	applePresent            bool
 	shader                  *ebiten.Shader
 	lastFrame               *ebiten.Image
-	frameCount              uint64
 }
 
 func Run() {
@@ -44,7 +43,6 @@ func Run() {
 		applePresent:            false,
 		shader:                  shader.NewShader(),
 		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
-		frameCount:              0,
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

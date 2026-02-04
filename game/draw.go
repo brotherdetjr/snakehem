@@ -7,7 +7,7 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.frameCount%model.TpsMultiplier == 0 {
+	if ebiten.Tick()%model.TpsMultiplier == 0 {
 		g.lastFrame.Clear()
 		g.sharedState.Draw(g.lastFrame)
 		g.localState.Draw(g.lastFrame)

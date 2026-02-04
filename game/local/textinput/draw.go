@@ -34,6 +34,15 @@ func (t *TextInput) Draw(screen *ebiten.Image) {
 		currentNameY,
 		pxterm24.Font,
 	)
+	if t.cursorShown {
+		common.DrawTextCentered(
+			screen,
+			util.PadRight("", len(t.value)+1)+"█"+util.PadRight("", t.maxLength-len(t.value)),
+			colornames.Orange,
+			currentNameY,
+			pxterm24.Font,
+		)
+	}
 	common.DrawTextCentered(
 		screen,
 		"["+util.PadRight("", t.maxLength)+"]",

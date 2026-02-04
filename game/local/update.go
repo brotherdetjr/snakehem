@@ -2,14 +2,15 @@ package local
 
 import (
 	"image/color"
+	"snakehem/game/common"
 	"snakehem/game/local/textinput"
 	"snakehem/input/controller"
 	"snakehem/model"
 )
 
-func (s *State) Update() {
+func (s *State) Update(ctx *common.Context) {
 	if s.textInput != nil {
-		s.textInput.Update()
+		s.textInput.Update(ctx)
 	}
 }
 

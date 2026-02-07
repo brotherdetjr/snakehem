@@ -17,11 +17,12 @@ import (
 func (t *TextInput) Update(ctx *common.Context) {
 	t.cursorShown = ctx.Tick/int64(model.Tps/t.cursorBlinkHz)%2 == 0
 	c := t.controller
-	// For text input, replacing WASD controls with a "normal" keyboard,
-	// because WASD are letters, but text input handles letters as direct input.
+	// Replacing WASD controls with a "normal" keyboard,
+	// because WASD are letters, but TextInput handles letters as a direct input.
 	if c == keyboardwasd.Instance {
 		c = keyboard.Instance
 	}
+	t.handleShift()
 	if c.IsUpPressed() {
 		t.moveUp()
 	} else if c.IsDownPressed() {
@@ -35,41 +36,60 @@ func (t *TextInput) Update(ctx *common.Context) {
 	} else if c.IsStartPressed() {
 		t.pressCurrentKey()
 	} else {
-		// Direct keyboard input
-		pressedKeys := inpututil.AppendPressedKeys(nil)
-		for _, pressedKey := range pressedKeys {
-			if !controller.IsRepeatingKeyboard(pressedKey) {
-				continue
-			}
-			if len(pressedKey.String()) == 1 {
-				// Try to find a matching key on the virtual keyboard
-				pressedKeyName := []rune(pressedKey.String())[0]
-				for r, gridRow := range t.keyboardGrid {
-					for c, gridKey := range gridRow {
-						if gridKey != nil && unicode.ToUpper(gridKey.char) == pressedKeyName {
-							t.cursorRow = r
-							t.cursorCol = c
-							t.pressCurrentKey()
-						}
-					}
-				}
-			} else if pressedKey == ebiten.KeySpace && t.spaceAvailable {
-				t.cursorRow = t.spaceKeyPos.row
-				t.cursorCol = t.spaceKeyPos.col
+		t.handleDirectInput()
+	}
+}
+
+func (t *TextInput) handleDirectInput() {
+	pressedKeys := inpututil.AppendPressedKeys(nil)
+	for _, pressedKey := range pressedKeys {
+		if !controller.IsRepeatingKeyboard(pressedKey) {
+			continue
+		}
+		if len(pressedKey.String()) == 1 {
+			t.findMatchingVirtualKey(pressedKey)
+		} else if pressedKey == ebiten.KeySpace && t.spaceAvailable {
+			t.cursorRow = t.spaceKeyPos.row
+			t.cursorCol = t.spaceKeyPos.col
+			t.pressCurrentKey()
+		} else if pressedKey == ebiten.KeyBackspace {
+			t.cursorRow = t.delKeyPos.row
+			t.cursorCol = t.delKeyPos.col
+			t.DeleteLastChar()
+		} else if pressedKey == ebiten.KeyEnter || pressedKey == ebiten.KeyNumpadEnter {
+			t.cursorRow = t.enterKeyPos.row
+			t.cursorCol = t.enterKeyPos.col
+			t.Submit()
+		} else if pressedKey == ebiten.KeyCapsLock && t.capsBehaviour != CapsBehaviourDisable {
+			t.cursorRow = t.capsKeyPos.row
+			t.cursorCol = t.capsKeyPos.col
+			t.ToggleCapsMode()
+		}
+	}
+}
+
+func (t *TextInput) findMatchingVirtualKey(pressedKey ebiten.Key) {
+	pressedKeyName := []rune(pressedKey.String())[0]
+	for r, gridRow := range t.keyboardGrid {
+		for c, gridKey := range gridRow {
+			if gridKey != nil && unicode.ToUpper(gridKey.char) == pressedKeyName {
+				t.cursorRow = r
+				t.cursorCol = c
 				t.pressCurrentKey()
-			} else if pressedKey == ebiten.KeyBackspace {
-				t.cursorRow = t.delKeyPos.row
-				t.cursorCol = t.delKeyPos.col
-				t.DeleteLastChar()
-			} else if pressedKey == ebiten.KeyEnter || pressedKey == ebiten.KeyNumpadEnter {
-				t.cursorRow = t.enterKeyPos.row
-				t.cursorCol = t.enterKeyPos.col
-				t.Submit()
-			} else if pressedKey == ebiten.KeyCapsLock && t.capsBehaviour != CapsBehaviourDisable {
-				t.cursorRow = t.capsKeyPos.row
-				t.cursorCol = t.capsKeyPos.col
-				t.ToggleCapsMode()
 			}
+		}
+	}
+}
+
+func (t *TextInput) handleShift() {
+	if t.capsBehaviour != CapsBehaviourDisable {
+		if inpututil.IsKeyJustPressed(ebiten.KeyShiftLeft) || inpututil.IsKeyJustPressed(ebiten.KeyShiftRight) {
+			t.shiftMode = true
+			t.initKeyboardGrid()
+		}
+		if inpututil.IsKeyJustReleased(ebiten.KeyShiftLeft) || inpututil.IsKeyJustReleased(ebiten.KeyShiftRight) {
+			t.shiftMode = false
+			t.initKeyboardGrid()
 		}
 	}
 }

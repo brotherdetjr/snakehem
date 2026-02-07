@@ -70,6 +70,7 @@ type TextInput struct {
 	delKeyPos      *keyPos
 	enterKeyPos    *keyPos
 	capsKeyPos     *keyPos
+	shiftMode      bool
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
@@ -95,6 +96,7 @@ func NewTextInput(controller controller.Controller) *TextInput {
 		delKeyPos:      nil,
 		enterKeyPos:    nil,
 		capsKeyPos:     nil,
+		shiftMode:      false,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -125,18 +127,27 @@ func (t *TextInput) WithCallback(callback func(string)) *TextInput {
 }
 
 func (t *TextInput) WithAvailableChars(availableChars []rune) *TextInput {
+	if &t.availableChars == &availableChars {
+		return t
+	}
 	t.availableChars = availableChars
 	t.initKeyboardGrid()
 	return t
 }
 
 func (t *TextInput) WithSpaceAvailable(spaceAvailable bool) *TextInput {
+	if t.spaceAvailable == spaceAvailable {
+		return t
+	}
 	t.spaceAvailable = spaceAvailable
 	t.initKeyboardGrid()
 	return t
 }
 
 func (t *TextInput) WithKeyboardCols(keyboardCols int) *TextInput {
+	if t.keyboardCols == keyboardCols {
+		return t
+	}
 	t.keyboardCols = keyboardCols
 	t.initKeyboardGrid()
 	return t
@@ -148,6 +159,9 @@ func (t *TextInput) WithTextColour(textColour color.Color) *TextInput {
 }
 
 func (t *TextInput) WithCapsMode(capsMode bool) *TextInput {
+	if t.capsMode == capsMode {
+		return t
+	}
 	t.capsMode = capsMode
 	t.initKeyboardGrid()
 	return t
@@ -234,7 +248,11 @@ func (t *TextInput) initKeyboardGrid() {
 
 	for i, char := range t.availableChars {
 		if unicode.IsLetter(char) {
-			if t.capsMode {
+			caps := t.capsMode
+			if t.shiftMode {
+				caps = !caps
+			}
+			if caps {
 				char = unicode.ToUpper(char)
 			} else { // in case if available chars are listed in upper case
 				char = unicode.ToLower(char)

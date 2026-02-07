@@ -3,6 +3,7 @@ package textinput
 import (
 	"math"
 	"snakehem/game/common"
+	"snakehem/input/controller"
 	"snakehem/input/keyboard"
 	"snakehem/input/keyboardwasd"
 	"snakehem/model"
@@ -35,10 +36,11 @@ func (t *TextInput) Update(ctx *common.Context) {
 		t.pressCurrentKey()
 	} else {
 		// Direct keyboard input
-		t.justPressedKeys = inpututil.AppendJustPressedKeys(t.justPressedKeys)
-		if len(t.justPressedKeys) > 0 {
-			pressedKey := t.justPressedKeys[0]
-			t.justPressedKeys = t.justPressedKeys[1:]
+		pressedKeys := inpututil.AppendPressedKeys(nil)
+		for _, pressedKey := range pressedKeys {
+			if !controller.IsRepeatingKeyboard(pressedKey) {
+				continue
+			}
 			if len(pressedKey.String()) == 1 {
 				// Try to find a matching key on the virtual keyboard
 				pressedKeyName := []rune(pressedKey.String())[0]

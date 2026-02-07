@@ -7,8 +7,6 @@ import (
 	"snakehem/input/controller"
 	"strings"
 	"unicode"
-
-	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type SpecialKey int
@@ -49,54 +47,52 @@ type keyPos struct {
 }
 
 type TextInput struct {
-	value           string
-	label           string
-	cursorRow       int
-	cursorCol       int
-	maxLength       int
-	controller      controller.Controller
-	callback        func(string)
-	validation      func(string) error
-	error           error
-	availableChars  []rune
-	keyboardGrid    [][]*KeyboardKey
-	spaceAvailable  bool
-	keyboardCols    int
-	keyboardRows    int
-	textColour      color.Color
-	capsMode        bool
-	capsBehaviour   CapsBehaviour
-	cursorShown     bool
-	cursorBlinkHz   float64
-	justPressedKeys []ebiten.Key
-	spaceKeyPos     *keyPos
-	delKeyPos       *keyPos
-	enterKeyPos     *keyPos
+	value          string
+	label          string
+	cursorRow      int
+	cursorCol      int
+	maxLength      int
+	controller     controller.Controller
+	callback       func(string)
+	validation     func(string) error
+	error          error
+	availableChars []rune
+	keyboardGrid   [][]*KeyboardKey
+	spaceAvailable bool
+	keyboardCols   int
+	keyboardRows   int
+	textColour     color.Color
+	capsMode       bool
+	capsBehaviour  CapsBehaviour
+	cursorShown    bool
+	cursorBlinkHz  float64
+	spaceKeyPos    *keyPos
+	delKeyPos      *keyPos
+	enterKeyPos    *keyPos
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
 	t := &TextInput{
-		value:           "",
-		label:           "",
-		cursorRow:       0,
-		cursorCol:       1, // row 0 col 1 -> SPACE key
-		maxLength:       24,
-		controller:      controller,
-		callback:        func(string) {},
-		validation:      nil,
-		error:           nil,
-		availableChars:  AZ09,
-		spaceAvailable:  true,
-		keyboardCols:    getMinKeyCols(true, CapsBehaviourNormal),
-		textColour:      color.White,
-		capsMode:        false,
-		capsBehaviour:   CapsBehaviourNormal,
-		cursorShown:     false,
-		cursorBlinkHz:   2,
-		justPressedKeys: nil,
-		spaceKeyPos:     nil,
-		delKeyPos:       nil,
-		enterKeyPos:     nil,
+		value:          "",
+		label:          "",
+		cursorRow:      0,
+		cursorCol:      1, // row 0 col 1 -> SPACE key
+		maxLength:      24,
+		controller:     controller,
+		callback:       func(string) {},
+		validation:     nil,
+		error:          nil,
+		availableChars: AZ09,
+		spaceAvailable: true,
+		keyboardCols:   getMinKeyCols(true, CapsBehaviourNormal),
+		textColour:     color.White,
+		capsMode:       false,
+		capsBehaviour:  CapsBehaviourNormal,
+		cursorShown:    false,
+		cursorBlinkHz:  2,
+		spaceKeyPos:    nil,
+		delKeyPos:      nil,
+		enterKeyPos:    nil,
 	}
 	t.initKeyboardGrid()
 	return t

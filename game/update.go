@@ -36,7 +36,7 @@ func (g *Game) Update() error {
 		os.Exit(0)
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
 		g.perfTrackerVisible = !g.perfTrackerVisible
-		log.Info().Bool("enabled", g.perfTrackerVisible).Msg("Performance tracker")
+		log.Debug().Bool("enabled", g.perfTrackerVisible).Msg("Performance tracker")
 		if g.perfTrackerVisible {
 			g.perfTracker = util.NewPerfTracker()
 		}

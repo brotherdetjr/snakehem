@@ -2,6 +2,7 @@ package game
 
 import (
 	"snakehem/assets/adhoc8"
+	"snakehem/game/common"
 	"snakehem/model"
 	"time"
 
@@ -10,11 +11,13 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	start := time.Now()
-	defer func() {
-		g.perfTracker.RecordDraw(time.Since(start))
-		g.perfTracker.RecordFPS(ebiten.ActualFPS())
-	}()
+	if g.perfTracker != nil {
+		start := time.Now()
+		defer func() {
+			g.perfTracker.RecordDraw(time.Since(start))
+			g.perfTracker.RecordFPS(ebiten.ActualFPS())
+		}()
+	}
 
 	if ebiten.Tick()%model.TpsMultiplier == 0 {
 		g.lastFrame.Clear()
@@ -39,7 +42,7 @@ func (g *Game) drawPerfStats(screen *ebiten.Image) {
 	y := 20
 	for _, line := range lines {
 		adhoc8.Font.DrawString(screen, 15, y, line, colornames.Lightgray)
-		y += adhoc8.Font.GetHeight() + 1
+		y += common.Adhoc8Height + 1
 	}
 }
 

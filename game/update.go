@@ -13,6 +13,7 @@ import (
 	. "snakehem/model/apple"
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
+	"snakehem/util"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -21,16 +22,21 @@ import (
 )
 
 func (g *Game) Update() error {
-	start := time.Now()
-	defer func() {
-		g.perfTracker.RecordUpdate(time.Since(start))
-		g.perfTracker.RecordTPS(ebiten.ActualTPS())
-	}()
+	if g.perfTracker != nil {
+		start := time.Now()
+		defer func() {
+			g.perfTracker.RecordUpdate(time.Since(start))
+			g.perfTracker.RecordTPS(ebiten.ActualTPS())
+		}()
+	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		os.Exit(0)
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyGraveAccent) {
 		g.perfTrackerVisible = !g.perfTrackerVisible
+		if g.perfTrackerVisible {
+			g.perfTracker = util.NewPerfTracker()
+		}
 	}
 	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
 	switch g.sharedState.Stage {

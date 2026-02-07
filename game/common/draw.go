@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"snakehem/assets/adhoc8"
 	"snakehem/assets/pxterm24"
 	"snakehem/model"
 
@@ -15,6 +16,7 @@ import (
 var ScoreFmt = "%0" + fmt.Sprint(int(math.Log10(model.TargetScore))+1) + "d"
 var Pxterm16Height = pxterm24.Font.GetHeight()
 var Pxterm24Height = pxterm24.Font.GetHeight()
+var Adhoc8Height = adhoc8.Font.GetHeight()
 
 const (
 	CellDimPx = 11

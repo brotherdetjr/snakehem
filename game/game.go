@@ -46,7 +46,7 @@ func Run() {
 		applePresent:            false,
 		shader:                  shader.NewShader(),
 		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
-		perfTracker:             util.NewPerfTracker(),
+		perfTracker:             nil,
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

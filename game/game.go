@@ -7,6 +7,7 @@ import (
 	"snakehem/game/shared"
 	"snakehem/input/controller"
 	"snakehem/model"
+	"snakehem/util"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pbnjay/pixfont"
@@ -23,6 +24,8 @@ type Game struct {
 	applePresent            bool
 	shader                  *ebiten.Shader
 	lastFrame               *ebiten.Image
+	perfTracker             *util.PerfTracker
+	perfTrackerVisible      bool
 }
 
 func Run() {
@@ -43,6 +46,7 @@ func Run() {
 		applePresent:            false,
 		shader:                  shader.NewShader(),
 		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
+		perfTracker:             util.NewPerfTracker(),
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

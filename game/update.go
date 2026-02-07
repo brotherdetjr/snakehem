@@ -9,7 +9,6 @@ import (
 	"snakehem/game/local"
 	"snakehem/game/shared"
 	"snakehem/input"
-	"snakehem/input/keyboard"
 	"snakehem/model"
 	. "snakehem/model/apple"
 	. "snakehem/model/direction"
@@ -22,8 +21,16 @@ import (
 )
 
 func (g *Game) Update() error {
-	if keyboard.Instance.IsExitJustPressed() {
+	start := time.Now()
+	defer func() {
+		g.perfTracker.RecordUpdate(time.Since(start))
+		g.perfTracker.RecordTPS(ebiten.ActualTPS())
+	}()
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		os.Exit(0)
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyGraveAccent) {
+		g.perfTrackerVisible = !g.perfTrackerVisible
 	}
 	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
 	switch g.sharedState.Stage {

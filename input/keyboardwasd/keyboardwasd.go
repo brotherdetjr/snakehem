@@ -61,19 +61,19 @@ func (k keyboardWasd) IsRightPressed() bool {
 }
 
 func (k keyboardWasd) IsExitJustPressed() bool {
-	return inpututil.IsKeyJustPressed(ebiten.KeyGraveAccent)
+	return inpututil.IsKeyJustPressed(ebiten.KeyControlLeft)
 }
 
 func (k keyboardWasd) IsExitPressed() bool {
-	return controller.IsRepeatingKeyboard(ebiten.KeyGraveAccent)
+	return controller.IsRepeatingKeyboard(ebiten.KeyControlLeft)
 }
 
 func (k keyboardWasd) IsStartJustPressed() bool {
-	return inpututil.IsKeyJustPressed(ebiten.KeyTab)
+	return inpututil.IsKeyJustPressed(ebiten.KeyAltLeft)
 }
 
 func (k keyboardWasd) IsStartPressed() bool {
-	return controller.IsRepeatingKeyboard(ebiten.KeyTab)
+	return controller.IsRepeatingKeyboard(ebiten.KeyAltLeft)
 }
 
 func (k keyboardWasd) Vibrate(_ time.Duration) {

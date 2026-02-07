@@ -32,9 +32,11 @@ func (g *Game) Update() error {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		log.Info().Msg("Exiting game")
 		os.Exit(0)
 	} else if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
 		g.perfTrackerVisible = !g.perfTrackerVisible
+		log.Info().Bool("enabled", g.perfTrackerVisible).Msg("Performance tracker")
 		if g.perfTrackerVisible {
 			g.perfTracker = util.NewPerfTracker()
 		}
@@ -81,16 +83,16 @@ func (g *Game) Update() error {
 			if g.sharedState.FadeCountdown == 0 {
 				if controller.IsUpJustPressed() {
 					direction = Up
-					log.Info().Any("snakeId", controller).Str("direction", "Up").Msg("New direction")
+					log.Debug().Int("snakeId", snake.Id).Str("direction", "Up").Msg("New direction")
 				} else if controller.IsDownJustPressed() {
 					direction = Down
-					log.Info().Any("snakeId", controller).Str("direction", "Down").Msg("New direction")
+					log.Debug().Int("snakeId", snake.Id).Str("direction", "Down").Msg("New direction")
 				} else if controller.IsLeftJustPressed() {
 					direction = Left
-					log.Info().Any("snakeId", controller).Str("direction", "Left").Msg("New direction")
+					log.Debug().Int("snakeId", snake.Id).Str("direction", "Left").Msg("New direction")
 				} else if controller.IsRightJustPressed() {
 					direction = Right
-					log.Info().Any("snakeId", controller).Str("direction", "Right").Msg("New direction")
+					log.Debug().Int("snakeId", snake.Id).Str("direction", "Right").Msg("New direction")
 				}
 			}
 			nX, nY := newHeadCoords(snake, direction)
@@ -134,6 +136,7 @@ func (g *Game) Update() error {
 							g.biteSnake(item, snake, idx)
 						}
 					case *Apple:
+						log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
 						g.incScore(snake, model.AppleScore)
 						g.sharedState.Grid[nY][nX] = nil
 						g.applePresent = false
@@ -163,7 +166,13 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 	}
 	if bittenLink.HealthPercent <= 0 {
 		if targetSnake != bitingSnake {
-			g.incScore(bitingSnake, (len(targetSnake.Links)-idx+1)*model.NippedTailLinkBonusMultiplier)
+			nippedTailLength := len(targetSnake.Links) - idx
+			log.Debug().
+				Int("bitingSnakeId", bitingSnake.Id).
+				Int("targetSnakeId", targetSnake.Id).
+				Int("nippedTailLength", nippedTailLength).
+				Msg("Nip!")
+			g.incScore(bitingSnake, nippedTailLength*model.NippedTailLinkBonusMultiplier)
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
@@ -171,14 +180,13 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
-	if bitingSnake.Score >= model.TargetScore {
-		g.sharedState.FadeCountdown = model.GridFadeCountdown
-	}
 }
 
 func (g *Game) incScore(snake *Snake, delta int) {
 	snake.Score += delta
+	log.Debug().Int("snakeId", snake.Id).Int("score", snake.Score).Msg("New score")
 	if snake.Score >= model.TargetScore {
+		log.Info().Msg("Stopping the action!")
 		g.sharedState.FadeCountdown = model.GridFadeCountdown
 	}
 }
@@ -202,16 +210,18 @@ func (g *Game) updateHeadCount() {
 						common.SnakeColours[snakeCount],
 						func(s string) {
 							// Submit name and join game
+							playerName := strings.TrimSpace(s)
 							snakes := g.sharedState.Snakes
 							snakeCount := len(snakes)
 							for _, snake := range snakes {
 								head := snake.Links[0]
 								g.sharedState.Grid[head.Y][head.X] = nil
 							}
-							newSnake := NewSnake(snakeCount, strings.TrimSpace(s), common.SnakeColours[snakeCount])
+							newSnake := NewSnake(snakeCount, playerName, common.SnakeColours[snakeCount])
 							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
 							g.layoutSnakes()
+							log.Info().Str("name", playerName).Int("id", snakeCount).Msg("Player joined")
 						},
 					)
 				}
@@ -219,6 +229,7 @@ func (g *Game) updateHeadCount() {
 				snakes[snakeIdx].Links[0].Redness = 1
 				if c.IsStartJustPressed() && snakeCount > 1 {
 					g.sharedState.Stage = shared.Action
+					log.Info().Int("tagetScore", model.TargetScore).Msg("Action started!")
 				}
 			}
 		}
@@ -287,6 +298,7 @@ func (g *Game) tryToPutAnotherApple() {
 	x, y := g.randomUnoccupiedCell()
 	if x != -1 && y != -1 {
 		g.sharedState.Grid[y][x] = &Apple{X: x, Y: y}
+		log.Debug().Int("x", x).Int("y", y).Msg("Apple put")
 		g.applePresent = true
 	}
 }
@@ -304,6 +316,7 @@ func (g *Game) restartPreservingSnakes() {
 		snake.Score = 0
 		snake.Links = snake.Links[0:1]
 	}
+	log.Info().Msg("Game restarted")
 }
 
 func newHeadCoords(s *Snake, direction Direction) (int, int) {

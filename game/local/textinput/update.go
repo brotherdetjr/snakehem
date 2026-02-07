@@ -3,16 +3,23 @@ package textinput
 import (
 	"math"
 	"snakehem/game/common"
+	"snakehem/input/keyboard"
+	"snakehem/input/keyboardwasd"
 	"snakehem/model"
 	"snakehem/util"
 	"unicode"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 func (t *TextInput) Update(ctx *common.Context) {
 	t.cursorShown = ctx.Tick/int64(model.Tps/t.cursorBlinkHz)%2 == 0
 	c := t.controller
-	if c.IsAnyJustPressed() {
-		t.error = nil
+	// For text input, replacing WASD controls with a "normal" keyboard,
+	// because WASD are letters, but text input handles letters as direct input.
+	if c == keyboardwasd.Instance {
+		c = keyboard.Instance
 	}
 	if c.IsUpPressed() {
 		t.moveUp()
@@ -26,6 +33,38 @@ func (t *TextInput) Update(ctx *common.Context) {
 		t.Submit()
 	} else if c.IsStartPressed() {
 		t.pressCurrentKey()
+	} else {
+		// Direct keyboard input
+		t.justPressedKeys = inpututil.AppendJustPressedKeys(t.justPressedKeys)
+		if len(t.justPressedKeys) > 0 {
+			pressedKey := t.justPressedKeys[0]
+			t.justPressedKeys = t.justPressedKeys[1:]
+			if len(pressedKey.String()) == 1 {
+				// Try to find a matching key on the virtual keyboard
+				pressedKeyName := []rune(pressedKey.String())[0]
+				for r, gridRow := range t.keyboardGrid {
+					for c, gridKey := range gridRow {
+						if gridKey != nil && unicode.ToUpper(gridKey.char) == pressedKeyName {
+							t.cursorRow = r
+							t.cursorCol = c
+							t.pressCurrentKey()
+						}
+					}
+				}
+			} else if pressedKey == ebiten.KeySpace && t.spaceAvailable {
+				t.cursorRow = t.spaceKeyPos.row
+				t.cursorCol = t.spaceKeyPos.col
+				t.pressCurrentKey()
+			} else if pressedKey == ebiten.KeyBackspace {
+				t.cursorRow = t.delKeyPos.row
+				t.cursorCol = t.delKeyPos.col
+				t.DeleteLastChar()
+			} else if pressedKey == ebiten.KeyEnter || pressedKey == ebiten.KeyNumpadEnter {
+				t.cursorRow = t.enterKeyPos.row
+				t.cursorCol = t.enterKeyPos.col
+				t.Submit()
+			}
+		}
 	}
 }
 
@@ -36,6 +75,7 @@ func (t *TextInput) updateCaps() {
 }
 
 func (t *TextInput) moveLeft() {
+	t.error = nil
 	for {
 		t.cursorCol--
 		if t.cursorCol < 0 {
@@ -48,6 +88,7 @@ func (t *TextInput) moveLeft() {
 }
 
 func (t *TextInput) moveRight() {
+	t.error = nil
 	for {
 		t.cursorCol++
 		if t.cursorCol >= t.keyboardCols {
@@ -60,6 +101,7 @@ func (t *TextInput) moveRight() {
 }
 
 func (t *TextInput) moveUp() {
+	t.error = nil
 	for {
 		t.cursorRow--
 		if t.cursorRow < 0 {
@@ -73,6 +115,7 @@ func (t *TextInput) moveUp() {
 }
 
 func (t *TextInput) moveDown() {
+	t.error = nil
 	for {
 		t.cursorRow++
 		if t.cursorRow >= t.keyboardRows {

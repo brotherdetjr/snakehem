@@ -7,6 +7,8 @@ import (
 	"snakehem/input/controller"
 	"strings"
 	"unicode"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type SpecialKey int
@@ -42,47 +44,59 @@ const (
 	CapsBehaviourNames
 )
 
+type keyPos struct {
+	row, col int
+}
+
 type TextInput struct {
-	value          string
-	label          string
-	cursorRow      int
-	cursorCol      int
-	maxLength      int
-	controller     controller.Controller
-	callback       func(string)
-	validation     func(string) error
-	error          error
-	availableChars []rune
-	keyboardGrid   [][]*KeyboardKey
-	spaceAvailable bool
-	keyboardCols   int
-	keyboardRows   int
-	textColour     color.Color
-	capsMode       bool
-	capsBehaviour  CapsBehaviour
-	cursorShown    bool
-	cursorBlinkHz  float64
+	value           string
+	label           string
+	cursorRow       int
+	cursorCol       int
+	maxLength       int
+	controller      controller.Controller
+	callback        func(string)
+	validation      func(string) error
+	error           error
+	availableChars  []rune
+	keyboardGrid    [][]*KeyboardKey
+	spaceAvailable  bool
+	keyboardCols    int
+	keyboardRows    int
+	textColour      color.Color
+	capsMode        bool
+	capsBehaviour   CapsBehaviour
+	cursorShown     bool
+	cursorBlinkHz   float64
+	justPressedKeys []ebiten.Key
+	spaceKeyPos     *keyPos
+	delKeyPos       *keyPos
+	enterKeyPos     *keyPos
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
 	t := &TextInput{
-		value:          "",
-		label:          "",
-		cursorRow:      0,
-		cursorCol:      1, // row 0 col 1 -> SPACE key
-		maxLength:      24,
-		controller:     controller,
-		callback:       func(string) {},
-		validation:     nil,
-		error:          nil,
-		availableChars: AZ09,
-		spaceAvailable: true,
-		keyboardCols:   getMinKeyCols(true, CapsBehaviourNormal),
-		textColour:     color.White,
-		capsMode:       false,
-		capsBehaviour:  CapsBehaviourNormal,
-		cursorShown:    false,
-		cursorBlinkHz:  2,
+		value:           "",
+		label:           "",
+		cursorRow:       0,
+		cursorCol:       1, // row 0 col 1 -> SPACE key
+		maxLength:       24,
+		controller:      controller,
+		callback:        func(string) {},
+		validation:      nil,
+		error:           nil,
+		availableChars:  AZ09,
+		spaceAvailable:  true,
+		keyboardCols:    getMinKeyCols(true, CapsBehaviourNormal),
+		textColour:      color.White,
+		capsMode:        false,
+		capsBehaviour:   CapsBehaviourNormal,
+		cursorShown:     false,
+		cursorBlinkHz:   2,
+		justPressedKeys: nil,
+		spaceKeyPos:     nil,
+		delKeyPos:       nil,
+		enterKeyPos:     nil,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -167,6 +181,7 @@ func (t *TextInput) GetCurrentKey() *KeyboardKey {
 }
 
 func (t *TextInput) Submit() {
+	t.error = nil
 	if err := t.validation(t.value); err != nil {
 		t.error = err
 	} else {
@@ -175,12 +190,14 @@ func (t *TextInput) Submit() {
 }
 
 func (t *TextInput) Clear() {
+	t.error = nil
 	t.value = ""
 	t.updateCaps()
 }
 
 func (t *TextInput) DeleteLastChar() {
 	if t.value != "" {
+		t.error = nil
 		t.value = t.value[:len(t.value)-1]
 		t.updateCaps()
 	}
@@ -189,12 +206,14 @@ func (t *TextInput) DeleteLastChar() {
 func (t *TextInput) AddSelectedChar() {
 	key := t.GetCurrentKey()
 	if key != nil && key.char != 0 && len(t.value) < t.maxLength {
+		t.error = nil
 		t.value += string(key.char)
 		t.updateCaps()
 	}
 }
 
 func (t *TextInput) ToggleCapsMode() {
+	t.error = nil
 	t.capsMode = !t.capsMode
 	t.initKeyboardGrid()
 }
@@ -241,6 +260,7 @@ func (t *TextInput) initKeyboardGrid() {
 		special:    SpecialKeyEnter,
 		displayStr: "ENTER",
 	}
+	t.enterKeyPos = &keyPos{0, col}
 	col = col + 2
 
 	t.keyboardGrid[0][col] = &KeyboardKey{
@@ -255,6 +275,7 @@ func (t *TextInput) initKeyboardGrid() {
 		special:    SpecialKeyDel,
 		displayStr: "DEL",
 	}
+	t.delKeyPos = &keyPos{0, col}
 	col = col + 2
 
 	if t.capsBehaviour != CapsBehaviourDisable {
@@ -272,6 +293,9 @@ func (t *TextInput) initKeyboardGrid() {
 			special:    SpecialKeySpace,
 			displayStr: "SPACE",
 		}
+		t.spaceKeyPos = &keyPos{0, col}
+	} else {
+		t.spaceKeyPos = nil
 	}
 }
 

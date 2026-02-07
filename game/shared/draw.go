@@ -11,6 +11,7 @@ import (
 	"snakehem/model/apple"
 	"snakehem/model/direction"
 	"snakehem/model/snake"
+	"snakehem/util"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -278,7 +279,7 @@ func drawScoreboard(p *State, screen *ebiten.Image) {
 		}
 		common.DrawTextCentered(
 			screen,
-			fmt.Sprintf("%s "+common.ScoreFmt, s.Name, score),
+			fmt.Sprintf("%s "+common.ScoreFmt, util.PadRight(s.Name, model.MaxNameLength), score),
 			common.WithRedness(s.Colour, s.Links[0].Redness),
 			float64(top),
 			pxterm24.Font,

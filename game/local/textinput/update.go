@@ -65,6 +65,10 @@ func (t *TextInput) Update(ctx *common.Context) {
 				t.cursorRow = t.enterKeyPos.row
 				t.cursorCol = t.enterKeyPos.col
 				t.Submit()
+			} else if pressedKey == ebiten.KeyCapsLock && t.capsBehaviour != CapsBehaviourDisable {
+				t.cursorRow = t.capsKeyPos.row
+				t.cursorCol = t.capsKeyPos.col
+				t.ToggleCapsMode()
 			}
 		}
 	}

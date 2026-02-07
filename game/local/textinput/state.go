@@ -69,6 +69,7 @@ type TextInput struct {
 	spaceKeyPos    *keyPos
 	delKeyPos      *keyPos
 	enterKeyPos    *keyPos
+	capsKeyPos     *keyPos
 }
 
 func NewTextInput(controller controller.Controller) *TextInput {
@@ -93,6 +94,7 @@ func NewTextInput(controller controller.Controller) *TextInput {
 		spaceKeyPos:    nil,
 		delKeyPos:      nil,
 		enterKeyPos:    nil,
+		capsKeyPos:     nil,
 	}
 	t.initKeyboardGrid()
 	return t
@@ -280,7 +282,10 @@ func (t *TextInput) initKeyboardGrid() {
 			special:    SpecialKeyCaps,
 			displayStr: "CAPS",
 		}
+		t.capsKeyPos = &keyPos{0, col}
 		col = col + 2
+	} else {
+		t.capsKeyPos = nil
 	}
 
 	if t.spaceAvailable {

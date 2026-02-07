@@ -40,10 +40,25 @@ func (g *Game) drawPerfStats(screen *ebiten.Image) {
 
 	lines := stats.AsString()
 	y := 20
-	for _, line := range lines {
-		adhoc8.Font.DrawString(screen, 15, y, line, colornames.Lightgray)
-		y += common.Adhoc8Height + 1
+
+	// First line (TPS/FPS) always in light gray
+	adhoc8.Font.DrawString(screen, 15, y, lines[0], colornames.Lightgray)
+	y += common.Adhoc8Height + 1
+
+	// Update line - red if warning, otherwise light gray
+	updateColor := colornames.Lightgray
+	if stats.UpdateWarning {
+		updateColor = colornames.Red
 	}
+	adhoc8.Font.DrawString(screen, 15, y, lines[1], updateColor)
+	y += common.Adhoc8Height + 1
+
+	// Draw line - red if warning, otherwise light gray
+	drawColor := colornames.Lightgray
+	if stats.DrawWarning {
+		drawColor = colornames.Red
+	}
+	adhoc8.Font.DrawString(screen, 15, y, lines[2], drawColor)
 }
 
 func (g *Game) applyShader(screen *ebiten.Image) {

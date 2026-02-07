@@ -17,13 +17,27 @@ const (
 	minMicros = 1       // 1 microsecond minimum
 	maxMicros = 1000000 // 1 second maximum
 	sigFigs   = 3       // 3 significant figures
+
+	// Growth detection parameters
+	percentileHistorySize = 1 * model.Tps // 1 second of percentile snapshots
+	growthThreshold       = 1.5           // 50% increase triggers warning
 )
 
+type percentileSnapshot struct {
+	p50 int64
+	p90 int64
+	p95 int64
+	p99 int64
+}
+
 type PerfTracker struct {
-	updateHist *hdrhistogram.Histogram
-	drawHist   *hdrhistogram.Histogram
-	tpsSamples []float64
-	fpsSamples []float64
+	updateHist           *hdrhistogram.Histogram
+	drawHist             *hdrhistogram.Histogram
+	tpsSamples           []float64
+	fpsSamples           []float64
+	updateBaselineP      percentileSnapshot
+	drawBaselineP        percentileSnapshot
+	ticksSinceLastUpdate int
 }
 
 func NewPerfTracker() *PerfTracker {
@@ -62,17 +76,19 @@ func (t *PerfTracker) RecordFPS(fps float64) {
 }
 
 type PerfStats struct {
-	UpdateP50   time.Duration
-	UpdateP90   time.Duration
-	UpdateP95   time.Duration
-	UpdateP99   time.Duration
-	DrawP50     time.Duration
-	DrawP90     time.Duration
-	DrawP95     time.Duration
-	DrawP99     time.Duration
-	TPSAvg      float64
-	FPSAvg      float64
-	SampleCount int64
+	UpdateP50     time.Duration
+	UpdateP90     time.Duration
+	UpdateP95     time.Duration
+	UpdateP99     time.Duration
+	DrawP50       time.Duration
+	DrawP90       time.Duration
+	DrawP95       time.Duration
+	DrawP99       time.Duration
+	TPSAvg        float64
+	FPSAvg        float64
+	SampleCount   int64
+	UpdateWarning bool // True if Update percentiles are growing too fast
+	DrawWarning   bool // True if Draw percentiles are growing too fast
 }
 
 //goland:noinspection DuplicatedCode
@@ -81,11 +97,20 @@ func (t *PerfTracker) GetStats() PerfStats {
 		SampleCount: t.updateHist.TotalCount(),
 	}
 
+	var currentUpdateSnapshot, currentDrawSnapshot percentileSnapshot
+
 	if t.updateHist.TotalCount() > 0 {
 		stats.UpdateP50 = time.Duration(t.updateHist.Mean()) * time.Microsecond
 		stats.UpdateP90 = time.Duration(t.updateHist.ValueAtQuantile(90)) * time.Microsecond
 		stats.UpdateP95 = time.Duration(t.updateHist.ValueAtQuantile(95)) * time.Microsecond
 		stats.UpdateP99 = time.Duration(t.updateHist.ValueAtQuantile(99)) * time.Microsecond
+
+		currentUpdateSnapshot = percentileSnapshot{
+			p50: int64(t.updateHist.Mean()),
+			p90: t.updateHist.ValueAtQuantile(90),
+			p95: t.updateHist.ValueAtQuantile(95),
+			p99: t.updateHist.ValueAtQuantile(99),
+		}
 	}
 
 	if t.drawHist.TotalCount() > 0 {
@@ -93,6 +118,13 @@ func (t *PerfTracker) GetStats() PerfStats {
 		stats.DrawP90 = time.Duration(t.drawHist.ValueAtQuantile(90)) * time.Microsecond
 		stats.DrawP95 = time.Duration(t.drawHist.ValueAtQuantile(95)) * time.Microsecond
 		stats.DrawP99 = time.Duration(t.drawHist.ValueAtQuantile(99)) * time.Microsecond
+
+		currentDrawSnapshot = percentileSnapshot{
+			p50: int64(t.drawHist.Mean()),
+			p90: t.drawHist.ValueAtQuantile(90),
+			p95: t.drawHist.ValueAtQuantile(95),
+			p99: t.drawHist.ValueAtQuantile(99),
+		}
 	}
 
 	if len(t.tpsSamples) > 0 {
@@ -101,6 +133,18 @@ func (t *PerfTracker) GetStats() PerfStats {
 
 	if len(t.fpsSamples) > 0 {
 		stats.FPSAvg = avgFloat(t.fpsSamples)
+	}
+
+	// Detect rapid growth in percentiles (compare against baseline from 1 second ago)
+	stats.UpdateWarning = t.detectGrowth(t.updateBaselineP, currentUpdateSnapshot)
+	stats.DrawWarning = t.detectGrowth(t.drawBaselineP, currentDrawSnapshot)
+
+	// Update baseline snapshot every percentileHistorySize ticks (1 second)
+	t.ticksSinceLastUpdate++
+	if t.ticksSinceLastUpdate >= percentileHistorySize {
+		t.updateBaselineP = currentUpdateSnapshot
+		t.drawBaselineP = currentDrawSnapshot
+		t.ticksSinceLastUpdate = 0
 	}
 
 	return stats
@@ -120,6 +164,27 @@ func (s PerfStats) AsString() []string {
 			formatDuration(s.DrawP95),
 			formatDuration(s.DrawP99)),
 	}
+}
+
+func (t *PerfTracker) detectGrowth(baseline, current percentileSnapshot) bool {
+	// Need a valid baseline (all zeros means we haven't collected 1 second of data yet)
+	if baseline.p50 == 0 && baseline.p90 == 0 && baseline.p95 == 0 && baseline.p99 == 0 {
+		return false
+	}
+
+	// Check if any percentile has grown too fast
+	return hasExcessiveGrowth(baseline.p50, current.p50) ||
+		hasExcessiveGrowth(baseline.p90, current.p90) ||
+		hasExcessiveGrowth(baseline.p95, current.p95) ||
+		hasExcessiveGrowth(baseline.p99, current.p99)
+}
+
+func hasExcessiveGrowth(baseline, current int64) bool {
+	if baseline == 0 {
+		return false
+	}
+	ratio := float64(current) / float64(baseline)
+	return ratio > growthThreshold
 }
 
 func avgFloat(values []float64) float64 {

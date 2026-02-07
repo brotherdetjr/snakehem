@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"snakehem/input/controller"
+	"snakehem/util"
 	"strings"
 	"unicode"
 )
@@ -127,7 +128,7 @@ func (t *TextInput) WithCallback(callback func(string)) *TextInput {
 }
 
 func (t *TextInput) WithAvailableChars(availableChars []rune) *TextInput {
-	if &t.availableChars == &availableChars {
+	if util.SameSlice(t.availableChars, availableChars) {
 		return t
 	}
 	t.availableChars = availableChars

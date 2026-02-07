@@ -14,6 +14,7 @@ import (
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
 	"snakehem/util"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,7 +33,7 @@ func (g *Game) Update() error {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		os.Exit(0)
-	} else if inpututil.IsKeyJustPressed(ebiten.KeyGraveAccent) {
+	} else if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
 		g.perfTrackerVisible = !g.perfTrackerVisible
 		if g.perfTrackerVisible {
 			g.perfTracker = util.NewPerfTracker()
@@ -207,7 +208,7 @@ func (g *Game) updateHeadCount() {
 								head := snake.Links[0]
 								g.sharedState.Grid[head.Y][head.X] = nil
 							}
-							newSnake := NewSnake(snakeCount, s, common.SnakeColours[snakeCount])
+							newSnake := NewSnake(snakeCount, strings.TrimSpace(s), common.SnakeColours[snakeCount])
 							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
 							g.layoutSnakes()

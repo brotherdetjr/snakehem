@@ -20,7 +20,7 @@ const (
 
 	// Growth detection parameters
 	percentileHistorySize = 1 * model.Tps // 1 second of percentile snapshots
-	growthThreshold       = 1.5           // 50% increase triggers warning
+	growthThreshold       = 1.25          // 25% increase triggers warning
 )
 
 type percentileSnapshot struct {

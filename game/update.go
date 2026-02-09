@@ -52,7 +52,7 @@ func (g *Game) Update() error {
 		if g.sharedState.FadeCountdown > 0 {
 			g.sharedState.FadeCountdown--
 			if g.sharedState.FadeCountdown == 0 {
-				g.sharedState.Stage = shared.Scoreboard
+				g.sharedState.SwitchToScoreboardStage()
 				break
 			}
 		}
@@ -204,7 +204,7 @@ func (g *Game) updateHeadCount() {
 			if snakeIdx == -1 {
 				if snakeCount < model.MaxSnakes && g.localState.GetStage() == local.Off {
 					// Start name entry for new player
-					g.localState.StagePlayerName(
+					g.localState.SwitchToPlayerNameStage(
 						c,
 						"Player "+string(rune('0'+(snakeCount+1))),
 						common.SnakeColours[snakeCount],
@@ -220,7 +220,7 @@ func (g *Game) updateHeadCount() {
 							newSnake := NewSnake(snakeCount, playerName, common.SnakeColours[snakeCount])
 							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
-							g.layoutSnakes()
+							g.sharedState.LayoutSnakes()
 							log.Info().Str("name", playerName).Int("id", snakeCount).Msg("Player joined")
 						},
 					)
@@ -252,21 +252,6 @@ func (g *Game) updateScoreboard() {
 				link.Redness = 1
 			}
 		}
-	}
-}
-
-func (g *Game) layoutSnakes() {
-	delta := 2 * math.Pi / float64(len(g.sharedState.Snakes))
-	alpha := float64(0)
-	for _, s := range g.sharedState.Snakes {
-		y := model.GridSize/2 - int(math.Cos(alpha)*model.GridSize/3)
-		x := model.GridSize/2 + int(math.Sin(alpha)*model.GridSize/3)
-		head := s.Links[0]
-		head.X = x
-		head.Y = y
-		g.sharedState.Grid[y][x] = head
-		alpha += delta
-		s.PickInitialDirection()
 	}
 }
 
@@ -304,18 +289,10 @@ func (g *Game) tryToPutAnotherApple() {
 }
 
 func (g *Game) restartPreservingSnakes() {
-	g.sharedState.Grid = [model.GridSize][model.GridSize]any{}
-	g.sharedState.Stage = shared.Lobby
-	g.sharedState.FadeCountdown = 0
-	g.sharedState.ActionFrameCount = 0
+	g.sharedState.SwitchToLobbyStage()
 	g.countdown = model.Tps * model.CountdownSeconds
 	g.applePresent = false
 	g.snakeHeadsRednessGrowth = -1
-	g.layoutSnakes()
-	for _, snake := range g.sharedState.Snakes {
-		snake.Score = 0
-		snake.Links = snake.Links[0:1]
-	}
 	log.Info().Msg("Game restarted")
 }
 

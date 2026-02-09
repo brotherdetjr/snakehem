@@ -3,7 +3,6 @@ package shared
 import (
 	"fmt"
 	"image/color"
-	"slices"
 	"snakehem/assets/pxterm16"
 	"snakehem/assets/pxterm24"
 	"snakehem/game/common"
@@ -11,7 +10,6 @@ import (
 	"snakehem/model/apple"
 	"snakehem/model/direction"
 	"snakehem/model/snake"
-	"snakehem/util"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,13 +23,13 @@ const (
 	EyeGapPx       = 3
 )
 
-func (p *State) Draw(screen *ebiten.Image) {
+func (s *State) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
-	drawItems(p, screen)
-	switch p.Stage {
+	drawItems(s, screen)
+	switch s.Stage {
 	case Lobby:
-		drawScores(p, screen)
-		snakeCount := len(p.Snakes)
+		drawScores(s, screen)
+		snakeCount := len(s.Snakes)
 		if snakeCount < 2 {
 			common.DrawTextCentered(
 				screen,
@@ -66,7 +64,7 @@ func (p *State) Draw(screen *ebiten.Image) {
 			}
 		}
 	case Action:
-		if p.FadeCountdown > 0 {
+		if s.FadeCountdown > 0 {
 			vector.FillRect(
 				screen,
 				0,
@@ -77,17 +75,17 @@ func (p *State) Draw(screen *ebiten.Image) {
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((model.GridFadeCountdown - p.FadeCountdown) * 200 / model.GridFadeCountdown),
+					A: uint8((model.GridFadeCountdown - s.FadeCountdown) * 200 / model.GridFadeCountdown),
 				},
 				false,
 			)
 		}
-		drawScores(p, screen)
-		drawCountdown(p, screen)
-		drawTimeElapsed(p, screen)
+		drawScores(s, screen)
+		drawCountdown(s, screen)
+		drawTimeElapsed(s, screen)
 	case Scoreboard:
-		drawScoreboard(p, screen)
-		drawTimeElapsed(p, screen)
+		s.scoreboard.Draw(screen)
+		drawTimeElapsed(s, screen)
 	}
 }
 
@@ -214,77 +212,6 @@ func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.C
 		colour = common.WithRedness(snake.Colour, snake.Links[0].Redness)
 	}
 	return txt, colour
-}
-
-func drawScoreboard(p *State, screen *ebiten.Image) {
-	vector.FillRect(
-		screen,
-		0,
-		0,
-		common.GridDimPx,
-		common.GridDimPx,
-		color.NRGBA{
-			R: 85,
-			G: 107,
-			B: 47,
-			A: 200,
-		},
-		false,
-	)
-	common.DrawTextCentered(
-		screen,
-		"GAME OVER",
-		colornames.Yellow,
-		float64(common.Pxterm24Height),
-		pxterm24.Font,
-	)
-	common.DrawTextCentered(
-		screen,
-		"PRESS START BUTTON TO PLAY AGAIN",
-		colornames.Yellow,
-		float64(common.Pxterm24Height*2+common.Pxterm16Height),
-		pxterm16.Font,
-	)
-	common.DrawTextCentered(
-		screen,
-		"      START                     ",
-		color.White,
-		float64(common.Pxterm24Height*2+common.Pxterm16Height),
-		pxterm16.Font,
-	)
-	common.DrawTextCentered(
-		screen,
-		"OR SELECT BUTTON TO QUIT",
-		colornames.Yellow,
-		float64(common.Pxterm24Height*2+common.Pxterm16Height*2),
-		pxterm16.Font,
-	)
-	common.DrawTextCentered(
-		screen,
-		"   SELECT               ",
-		color.White,
-		float64(common.Pxterm24Height*2+common.Pxterm16Height*2),
-		pxterm16.Font,
-	)
-	snakes := make([]*snake.Snake, len(p.Snakes))
-	copy(snakes, p.Snakes)
-	slices.SortFunc(snakes, func(a, b *snake.Snake) int {
-		return b.Score - a.Score
-	})
-	for i, s := range snakes {
-		top := common.Pxterm24Height * 2 * (i + 3)
-		score := s.Score
-		if score > model.TargetScore {
-			score = model.TargetScore
-		}
-		common.DrawTextCentered(
-			screen,
-			fmt.Sprintf("%s "+common.ScoreFmt, util.PadRight(s.Name, model.MaxNameLength), score),
-			common.WithRedness(s.Colour, s.Links[0].Redness),
-			float64(top),
-			pxterm24.Font,
-		)
-	}
 }
 
 func drawTimeElapsed(p *State, screen *ebiten.Image) {

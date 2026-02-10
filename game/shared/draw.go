@@ -6,9 +6,8 @@ import (
 	"snakehem/assets/pxterm16"
 	"snakehem/assets/pxterm24"
 	"snakehem/game/common"
+	"snakehem/game/shared/snake"
 	"snakehem/model"
-	"snakehem/model/direction"
-	"snakehem/model/snake"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -109,27 +108,27 @@ func drawItems(p *State, screen *ebiten.Image) {
 					} else {
 						var x1, y1, x2, y2 float32
 						switch s.Direction {
-						case direction.Up:
+						case snake.Up:
 							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
 							y1 = float32(item.Y*common.CellDimPx) + EyeGapPx
 							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
 							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
-						case direction.Down:
+						case snake.Down:
 							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
 							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
 							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
 							y2 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
-						case direction.Left:
+						case snake.Left:
 							x1 = float32(item.X*common.CellDimPx) + EyeGapPx
 							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
 							x2 = float32(item.X*common.CellDimPx) + EyeGapPx
 							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
-						case direction.Right:
+						case snake.Right:
 							x1 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
 							y1 = float32((item.Y+1)*common.CellDimPx) - EyeGapPx
 							x2 = float32((item.X+1)*common.CellDimPx) - EyeGapPx
 							y2 = float32(item.Y*common.CellDimPx) + EyeGapPx
-						case direction.None:
+						case snake.None:
 						}
 						if x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0 {
 							vector.FillCircle(

@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"math"
 	"snakehem/model"
-	"snakehem/model/direction"
 )
 
 type Snake struct {
@@ -12,7 +11,7 @@ type Snake struct {
 	Name      string
 	Links     []*Link
 	Colour    color.Color
-	Direction direction.Direction
+	Direction Direction
 	Score     int
 }
 
@@ -45,18 +44,18 @@ func (s *Snake) PickInitialDirection() {
 	x := head.X
 	y := head.Y
 	midPoint := model.GridSize/2 + 1
-	dir := direction.None
+	dir := None
 	if math.Abs(float64(midPoint-x)) > math.Abs(float64(midPoint-y)) {
 		if midPoint < x {
-			dir = direction.Left
+			dir = Left
 		} else {
-			dir = direction.Right
+			dir = Right
 		}
 	} else {
 		if midPoint < y {
-			dir = direction.Up
+			dir = Up
 		} else {
-			dir = direction.Down
+			dir = Down
 		}
 	}
 	s.Direction = dir
@@ -68,5 +67,35 @@ func (l *Link) ChangeRedness(delta float32) {
 		l.Redness = 0
 	} else if l.Redness > 1 {
 		l.Redness = 1
+	}
+}
+
+type Direction uint8
+
+const (
+	None Direction = iota
+	Up
+	Down
+	Left
+	Right
+)
+
+func (d Direction) Dx() int {
+	if d == Left {
+		return -1
+	} else if d == Right {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func (d Direction) Dy() int {
+	if d == Up {
+		return -1
+	} else if d == Down {
+		return 1
+	} else {
+		return 0
 	}
 }

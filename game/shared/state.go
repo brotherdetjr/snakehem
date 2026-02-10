@@ -6,8 +6,8 @@ import (
 	"math/rand/v2"
 	"snakehem/game/common"
 	"snakehem/game/shared/scoreboard"
+	"snakehem/game/shared/snake"
 	"snakehem/model"
-	"snakehem/model/snake"
 	"snakehem/util"
 
 	"github.com/rs/zerolog/log"

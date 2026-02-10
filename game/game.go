@@ -21,7 +21,6 @@ type Game struct {
 	activeControllers       []controller.Controller
 	snakeHeadsRednessGrowth float32
 	countdown               int
-	applePresent            bool
 	shader                  *ebiten.Shader
 	lastFrame               *ebiten.Image
 	perfTracker             *util.PerfTracker
@@ -43,7 +42,6 @@ func Run() {
 		activeControllers:       nil,
 		snakeHeadsRednessGrowth: -1,
 		countdown:               model.Tps * model.CountdownSeconds,
-		applePresent:            false,
 		shader:                  shader.NewShader(),
 		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
 		perfTracker:             nil,

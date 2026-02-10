@@ -3,10 +3,14 @@ package shared
 import (
 	"image/color"
 	"math"
+	"math/rand/v2"
 	"snakehem/game/common"
 	"snakehem/game/shared/scoreboard"
 	"snakehem/model"
 	"snakehem/model/snake"
+	"snakehem/util"
+
+	"github.com/rs/zerolog/log"
 )
 
 type State struct {
@@ -17,6 +21,7 @@ type State struct {
 	FadeCountdown    int
 	ActionFrameCount uint64
 	scoreboard       *scoreboard.Scoreboard
+	applePos         *util.Coords
 }
 
 func NewSharedState() *State {
@@ -27,6 +32,7 @@ func NewSharedState() *State {
 		FadeCountdown:    0,
 		ActionFrameCount: 0,
 		scoreboard:       nil,
+		applePos:         nil,
 	}
 }
 
@@ -82,4 +88,36 @@ func (s *State) LayoutSnakes() {
 		alpha += delta
 		sn.PickInitialDirection()
 	}
+}
+
+func (s *State) TryToPutNewApple() {
+	if s.applePos == nil && rand.IntN(model.NewAppleProbabilityParam) == 0 {
+		x, y := s.randomUnoccupiedCell()
+		if x != -1 && y != -1 {
+			s.applePos = &util.Coords{X: x, Y: y}
+			log.Debug().Int("x", x).Int("y", y).Msg("Put a new apple")
+		}
+	}
+}
+
+func (s *State) IsAppleHere(x, y int) bool {
+	return s.applePos != nil && *s.applePos == util.Coords{X: x, Y: y}
+}
+
+func (s *State) EatApple() {
+	s.applePos = nil
+}
+
+func (s *State) randomUnoccupiedCell() (int, int) {
+	x := rand.IntN(model.GridSize)
+	y := rand.IntN(model.GridSize)
+	for ; y < model.GridSize; y++ {
+		for ; x < model.GridSize; x++ {
+			if s.Grid[y][x] == nil {
+				return x, y
+			}
+		}
+		x = 0
+	}
+	return -1, -1
 }

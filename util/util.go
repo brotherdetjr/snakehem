@@ -26,3 +26,7 @@ func SameSlice[T any](a, b []T) bool {
 	}
 	return unsafe.Pointer(&a[0]) == unsafe.Pointer(&b[0])
 }
+
+type Coords struct {
+	X, Y int
+}

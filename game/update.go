@@ -2,7 +2,6 @@ package game
 
 import (
 	"math"
-	"math/rand/v2"
 	"os"
 	"slices"
 	"snakehem/game/common"
@@ -10,7 +9,6 @@ import (
 	"snakehem/game/shared"
 	"snakehem/input"
 	"snakehem/model"
-	. "snakehem/model/apple"
 	. "snakehem/model/direction"
 	. "snakehem/model/snake"
 	"snakehem/util"
@@ -128,6 +126,11 @@ func (g *Game) Update() error {
 					for _, link := range snake.Links {
 						g.sharedState.Grid[link.Y][link.X] = link
 					}
+					if g.sharedState.IsAppleHere(nX, nY) {
+						g.incScore(snake, model.AppleScore)
+						g.sharedState.EatApple()
+						log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
+					}
 				} else if g.sharedState.FadeCountdown == 0 {
 					switch item := g.sharedState.Grid[nY][nX].(type) {
 					case *Link:
@@ -135,19 +138,12 @@ func (g *Game) Update() error {
 						if idx > 0 {
 							g.biteSnake(item, snake, idx)
 						}
-					case *Apple:
-						log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
-						g.incScore(snake, model.AppleScore)
-						g.sharedState.Grid[nY][nX] = nil
-						g.applePresent = false
 					}
 				}
 			}
 			snake.Direction = direction
 		}
-		if !g.applePresent && rand.IntN(model.NewAppleProbabilityParam) == 0 {
-			g.tryToPutAnotherApple()
-		}
+		g.sharedState.TryToPutNewApple()
 		g.sharedState.ActionFrameCount++
 	case shared.Scoreboard:
 		g.updateScoreboard()
@@ -265,33 +261,9 @@ func (g *Game) isAnyButtonPressed(id ebiten.GamepadID) bool {
 	return buttonPressed
 }
 
-func (g *Game) randomUnoccupiedCell() (int, int) {
-	x := rand.IntN(model.GridSize)
-	y := rand.IntN(model.GridSize)
-	for ; y < model.GridSize; y++ {
-		for ; x < model.GridSize; x++ {
-			if g.sharedState.Grid[y][x] == nil {
-				return x, y
-			}
-		}
-		x = 0
-	}
-	return -1, -1
-}
-
-func (g *Game) tryToPutAnotherApple() {
-	x, y := g.randomUnoccupiedCell()
-	if x != -1 && y != -1 {
-		g.sharedState.Grid[y][x] = &Apple{X: x, Y: y}
-		log.Debug().Int("x", x).Int("y", y).Msg("Apple put")
-		g.applePresent = true
-	}
-}
-
 func (g *Game) restartPreservingSnakes() {
 	g.sharedState.SwitchToLobbyStage()
 	g.countdown = model.Tps * model.CountdownSeconds
-	g.applePresent = false
 	g.snakeHeadsRednessGrowth = -1
 	log.Info().Msg("Game restarted")
 }

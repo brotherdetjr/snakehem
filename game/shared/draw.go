@@ -7,7 +7,6 @@ import (
 	"snakehem/assets/pxterm24"
 	"snakehem/game/common"
 	"snakehem/model"
-	"snakehem/model/apple"
 	"snakehem/model/direction"
 	"snakehem/model/snake"
 	"time"
@@ -161,20 +160,22 @@ func drawItems(p *State, screen *ebiten.Image) {
 							)
 						}
 					}
-				case *apple.Apple:
-					vector.FillRect(
-						screen,
-						float32(item.X*common.CellDimPx),
-						float32(item.Y*common.CellDimPx),
-						common.CellDimPx,
-						common.CellDimPx,
-						colornames.Red,
-						false,
-					)
 				}
 			}
 		}
 	}
+	if a := p.applePos; a != nil {
+		vector.FillRect(
+			screen,
+			float32(a.X*common.CellDimPx),
+			float32(a.Y*common.CellDimPx),
+			common.CellDimPx,
+			common.CellDimPx,
+			colornames.Red,
+			false,
+		)
+	}
+
 }
 
 func drawScores(p *State, screen *ebiten.Image) {

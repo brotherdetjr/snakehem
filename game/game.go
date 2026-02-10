@@ -15,16 +15,15 @@ import (
 )
 
 type Game struct {
-	sharedState             *shared.State
-	localState              *local.State
-	controllers             []controller.Controller
-	activeControllers       []controller.Controller
-	snakeHeadsRednessGrowth float32
-	countdown               int
-	shader                  *ebiten.Shader
-	lastFrame               *ebiten.Image
-	perfTracker             *util.PerfTracker
-	perfTrackerVisible      bool
+	sharedState        *shared.State
+	localState         *local.State
+	controllers        []controller.Controller
+	activeControllers  []controller.Controller
+	countdown          int
+	shader             *ebiten.Shader
+	lastFrame          *ebiten.Image
+	perfTracker        *util.PerfTracker
+	perfTrackerVisible bool
 }
 
 func Run() {
@@ -36,15 +35,14 @@ func Run() {
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		sharedState:             shared.NewSharedState(),
-		localState:              local.NewLocalState(),
-		controllers:             nil,
-		activeControllers:       nil,
-		snakeHeadsRednessGrowth: -1,
-		countdown:               model.Tps * model.CountdownSeconds,
-		shader:                  shader.NewShader(),
-		lastFrame:               ebiten.NewImage(common.GridDimPx, common.GridDimPx),
-		perfTracker:             nil,
+		sharedState:       shared.NewSharedState(),
+		localState:        local.NewLocalState(),
+		controllers:       nil,
+		activeControllers: nil,
+		countdown:         model.Tps * model.CountdownSeconds,
+		shader:            shader.NewShader(),
+		lastFrame:         ebiten.NewImage(common.GridDimPx, common.GridDimPx),
+		perfTracker:       nil,
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

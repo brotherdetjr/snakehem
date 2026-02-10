@@ -57,7 +57,13 @@ func (g *Game) Update() error {
 		for _, snake := range g.sharedState.Snakes {
 			head := snake.Links[0]
 			if g.countdown <= model.Tps {
-				head.ChangeRedness(0.2 * g.snakeHeadsRednessGrowth)
+				var snakeHeadsRednessGrowth float32
+				if (g.sharedState.ActionFrameCount/model.Tps)%2 == 0 {
+					snakeHeadsRednessGrowth = -1
+				} else {
+					snakeHeadsRednessGrowth = 1
+				}
+				head.ChangeRedness(0.2 * snakeHeadsRednessGrowth)
 			} else if g.activeControllers[snake.Id].IsAnyJustPressed() && g.sharedState.FadeCountdown == 0 {
 				head.Redness = 1
 			} else {
@@ -68,9 +74,6 @@ func (g *Game) Update() error {
 					link.ChangeRedness(-0.1)
 				}
 			}
-		}
-		if g.sharedState.ActionFrameCount%model.Tps == 0 {
-			g.snakeHeadsRednessGrowth *= -1
 		}
 		if g.countdown > model.Tps {
 			break
@@ -253,7 +256,6 @@ func (g *Game) isAnyButtonPressed(id ebiten.GamepadID) bool {
 func (g *Game) restartPreservingSnakes() {
 	g.sharedState.SwitchToLobbyStage()
 	g.countdown = model.Tps * model.CountdownSeconds
-	g.snakeHeadsRednessGrowth = -1
 	log.Info().Msg("Game restarted")
 }
 

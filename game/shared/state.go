@@ -100,12 +100,23 @@ func (s *State) TryToPutNewApple() {
 	}
 }
 
+func (s *State) IncScore(snake *snake.Snake, delta int) {
+	snake.Score += delta
+	log.Debug().Int("snakeId", snake.Id).Int("score", snake.Score).Msg("New score")
+	if snake.Score >= model.TargetScore {
+		log.Info().Msg("Stopping the action!")
+		s.FadeCountdown = model.GridFadeCountdown
+	}
+}
+
 func (s *State) IsAppleHere(x, y int) bool {
 	return s.applePos != nil && *s.applePos == util.Coords{X: x, Y: y}
 }
 
-func (s *State) EatApple() {
+func (s *State) EatApple(snake *snake.Snake) {
 	s.applePos = nil
+	s.IncScore(snake, model.AppleScore)
+	log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
 }
 
 func (s *State) randomUnoccupiedCell() (int, int) {

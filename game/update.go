@@ -127,9 +127,7 @@ func (g *Game) Update() error {
 						g.sharedState.Grid[link.Y][link.X] = link
 					}
 					if g.sharedState.IsAppleHere(nX, nY) {
-						g.incScore(snake, model.AppleScore)
-						g.sharedState.EatApple()
-						log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
+						g.sharedState.EatApple(snake)
 					}
 				} else if g.sharedState.FadeCountdown == 0 {
 					switch item := g.sharedState.Grid[nY][nX].(type) {
@@ -158,7 +156,7 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 	bittenLink.Redness = 1
 	g.activeControllers[targetSnake.Id].Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
-		g.incScore(bitingSnake, model.BitLinkScore)
+		g.sharedState.IncScore(bitingSnake, model.BitLinkScore)
 	}
 	if bittenLink.HealthPercent <= 0 {
 		if targetSnake != bitingSnake {
@@ -168,22 +166,13 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 				Int("targetSnakeId", targetSnake.Id).
 				Int("nippedTailLength", nippedTailLength).
 				Msg("Nip!")
-			g.incScore(bitingSnake, nippedTailLength*model.NippedTailLinkBonusMultiplier)
+			g.sharedState.IncScore(bitingSnake, nippedTailLength*model.NippedTailLinkBonusMultiplier)
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
 			g.sharedState.Grid[link.Y][link.X] = nil
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
-	}
-}
-
-func (g *Game) incScore(snake *Snake, delta int) {
-	snake.Score += delta
-	log.Debug().Int("snakeId", snake.Id).Int("score", snake.Score).Msg("New score")
-	if snake.Score >= model.TargetScore {
-		log.Info().Msg("Stopping the action!")
-		g.sharedState.FadeCountdown = model.GridFadeCountdown
 	}
 }
 

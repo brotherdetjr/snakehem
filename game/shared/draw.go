@@ -95,7 +95,7 @@ func drawItems(p *State, screen *ebiten.Image) {
 				case *snake.Link:
 					s := p.Snakes[item.SnakeId]
 					shrink := (1 - float32(item.HealthPercent)/100) * common.CellDimPx * 0.5
-					if item != s.Links[0] || p.Countdown > 0 {
+					if item != s.Links[0] || p.GetCountdownSeconds() > 0 {
 						vector.FillRect(
 							screen,
 							float32(item.X*common.CellDimPx)+shrink,
@@ -206,7 +206,7 @@ func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.C
 	}
 	txt := fmt.Sprintf(common.ScoreFmt, score)
 	var colour color.Color
-	if p.Stage == Action && p.Countdown < 1 {
+	if p.Stage == Action && p.GetCountdownSeconds() < 1 {
 		colour = snake.Colour
 	} else {
 		colour = common.WithRedness(snake.Colour, snake.Links[0].Redness)
@@ -226,11 +226,12 @@ func drawTimeElapsed(p *State, screen *ebiten.Image) {
 }
 
 func drawCountdown(p *State, screen *ebiten.Image) {
-	if p.Countdown <= 0 {
+	countdown := p.GetCountdownSeconds()
+	if countdown < 0 {
 		return
 	}
 	var txt string
-	switch p.Countdown {
+	switch countdown {
 	case 3:
 		txt = "THREE"
 	case 2:
@@ -243,7 +244,7 @@ func drawCountdown(p *State, screen *ebiten.Image) {
 		txt = "WAIT..."
 	}
 	common.DrawTextCentered(screen, txt, color.White, common.GridDimPx/2.5, pxterm24.Font)
-	if p.Countdown > 0 {
+	if countdown > 0 {
 		common.DrawTextCentered(
 			screen,
 			fmt.Sprintf("TARGET SCORE: %d", model.TargetScore),

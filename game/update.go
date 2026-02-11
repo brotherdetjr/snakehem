@@ -1,7 +1,6 @@
 package game
 
 import (
-	"math"
 	"os"
 	"slices"
 	"snakehem/game/common"
@@ -43,8 +42,8 @@ func (g *Game) Update() error {
 	case shared.Lobby:
 		g.updateHeadCount()
 	case shared.Action:
-		if g.countdown > 0 {
-			g.countdown--
+		if g.sharedState.GetCountdownSeconds() >= 0 {
+			g.sharedState.Countdown--
 		}
 		if g.sharedState.FadeCountdown > 0 {
 			g.sharedState.FadeCountdown--
@@ -55,7 +54,7 @@ func (g *Game) Update() error {
 		}
 		for _, snake := range g.sharedState.Snakes {
 			head := snake.Links[0]
-			if g.countdown <= model.Tps {
+			if g.sharedState.GetCountdownSeconds() <= 0 {
 				var snakeHeadsRednessGrowth float32
 				if (g.sharedState.ActionFrameCount/model.Tps)%2 == 0 {
 					snakeHeadsRednessGrowth = -1
@@ -74,7 +73,7 @@ func (g *Game) Update() error {
 				}
 			}
 		}
-		if g.countdown > model.Tps {
+		if g.sharedState.GetCountdownSeconds() > 0 {
 			break
 		}
 		for _, snake := range g.sharedState.Snakes {
@@ -148,7 +147,6 @@ func (g *Game) Update() error {
 	case shared.Scoreboard:
 		g.updateScoreboard()
 	}
-	g.sharedState.Countdown = int(math.Ceil(float64(g.countdown)/model.Tps)) - 1
 	return nil
 }
 
@@ -227,7 +225,7 @@ func (g *Game) updateScoreboard() {
 	for _, snake := range g.sharedState.Snakes {
 		controller := g.activeControllers[snake.Id]
 		if controller.IsStartJustPressed() {
-			g.restartPreservingSnakes()
+			g.sharedState.SwitchToLobbyStage()
 		} else if controller.IsExitJustPressed() {
 			os.Exit(0)
 		}
@@ -250,12 +248,6 @@ func (g *Game) isAnyButtonPressed(id ebiten.GamepadID) bool {
 		}
 	}
 	return buttonPressed
-}
-
-func (g *Game) restartPreservingSnakes() {
-	g.sharedState.SwitchToLobbyStage()
-	g.countdown = model.Tps * model.CountdownSeconds
-	log.Info().Msg("Game restarted")
 }
 
 func newHeadCoords(s *Snake, direction Direction) (int, int) {

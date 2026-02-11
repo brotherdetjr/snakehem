@@ -19,7 +19,6 @@ type Game struct {
 	localState         *local.State
 	controllers        []controller.Controller
 	activeControllers  []controller.Controller
-	countdown          int
 	shader             *ebiten.Shader
 	lastFrame          *ebiten.Image
 	perfTracker        *util.PerfTracker
@@ -39,7 +38,6 @@ func Run() {
 		localState:        local.NewLocalState(),
 		controllers:       nil,
 		activeControllers: nil,
-		countdown:         model.Tps * model.CountdownSeconds,
 		shader:            shader.NewShader(),
 		lastFrame:         ebiten.NewImage(common.GridDimPx, common.GridDimPx),
 		perfTracker:       nil,

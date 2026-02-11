@@ -28,7 +28,7 @@ func NewSharedState() *State {
 	return &State{
 		Stage:            Lobby,
 		Grid:             [model.GridSize][model.GridSize]any{},
-		Countdown:        3,
+		Countdown:        model.Tps * model.CountdownSeconds,
 		FadeCountdown:    0,
 		ActionFrameCount: 0,
 		scoreboard:       nil,
@@ -64,15 +64,19 @@ func (s *State) SwitchToScoreboardStage() {
 }
 
 func (s *State) SwitchToLobbyStage() {
-	s.Grid = [model.GridSize][model.GridSize]any{}
 	s.Stage = Lobby
-	s.FadeCountdown = 0
-	s.ActionFrameCount = 0
+	s.Grid = [model.GridSize][model.GridSize]any{}
 	for _, sn := range s.Snakes {
 		sn.Score = 0
 		sn.Links = sn.Links[0:1]
 	}
+	s.Countdown = model.Tps * model.CountdownSeconds
+	s.FadeCountdown = 0
+	s.ActionFrameCount = 0
+	s.scoreboard = nil
+	s.applePos = nil
 	s.LayoutSnakes()
+	log.Info().Msg("Game restarted")
 }
 
 func (s *State) LayoutSnakes() {
@@ -117,6 +121,10 @@ func (s *State) EatApple(snake *snake.Snake) {
 	s.applePos = nil
 	s.IncScore(snake, model.AppleScore)
 	log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
+}
+
+func (s *State) GetCountdownSeconds() int {
+	return (s.Countdown - 1) / model.Tps
 }
 
 func (s *State) randomUnoccupiedCell() (int, int) {

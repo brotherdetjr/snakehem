@@ -1,4 +1,4 @@
-package util
+package perftracker
 
 import (
 	"fmt"
@@ -49,29 +49,29 @@ func NewPerfTracker() *PerfTracker {
 	}
 }
 
-func (t *PerfTracker) RecordUpdate(duration time.Duration) {
-	if err := t.updateHist.RecordValue(duration.Microseconds()); err != nil {
+func (p *PerfTracker) RecordUpdate(duration time.Duration) {
+	if err := p.updateHist.RecordValue(duration.Microseconds()); err != nil {
 		log.Warn().Dur("duration", duration).Msg("Update took incredibly long")
 	}
 }
 
-func (t *PerfTracker) RecordDraw(duration time.Duration) {
-	if err := t.drawHist.RecordValue(duration.Microseconds()); err != nil {
+func (p *PerfTracker) RecordDraw(duration time.Duration) {
+	if err := p.drawHist.RecordValue(duration.Microseconds()); err != nil {
 		log.Warn().Dur("duration", duration).Msg("Draw took incredibly long")
 	}
 }
 
-func (t *PerfTracker) RecordTPS(tps float64) {
-	t.tpsSamples = append(t.tpsSamples, tps)
-	if len(t.tpsSamples) > windowSize {
-		t.tpsSamples = t.tpsSamples[1:]
+func (p *PerfTracker) RecordTPS(tps float64) {
+	p.tpsSamples = append(p.tpsSamples, tps)
+	if len(p.tpsSamples) > windowSize {
+		p.tpsSamples = p.tpsSamples[1:]
 	}
 }
 
-func (t *PerfTracker) RecordFPS(fps float64) {
-	t.fpsSamples = append(t.fpsSamples, fps)
-	if len(t.fpsSamples) > windowSize {
-		t.fpsSamples = t.fpsSamples[1:]
+func (p *PerfTracker) RecordFPS(fps float64) {
+	p.fpsSamples = append(p.fpsSamples, fps)
+	if len(p.fpsSamples) > windowSize {
+		p.fpsSamples = p.fpsSamples[1:]
 	}
 }
 
@@ -92,59 +92,59 @@ type PerfStats struct {
 }
 
 //goland:noinspection DuplicatedCode
-func (t *PerfTracker) GetStats() PerfStats {
+func (p *PerfTracker) GetStats() PerfStats {
 	stats := PerfStats{
-		SampleCount: t.updateHist.TotalCount(),
+		SampleCount: p.updateHist.TotalCount(),
 	}
 
 	var currentUpdateSnapshot, currentDrawSnapshot percentileSnapshot
 
-	if t.updateHist.TotalCount() > 0 {
-		stats.UpdateP50 = time.Duration(t.updateHist.Mean()) * time.Microsecond
-		stats.UpdateP90 = time.Duration(t.updateHist.ValueAtQuantile(90)) * time.Microsecond
-		stats.UpdateP95 = time.Duration(t.updateHist.ValueAtQuantile(95)) * time.Microsecond
-		stats.UpdateP99 = time.Duration(t.updateHist.ValueAtQuantile(99)) * time.Microsecond
+	if p.updateHist.TotalCount() > 0 {
+		stats.UpdateP50 = time.Duration(p.updateHist.Mean()) * time.Microsecond
+		stats.UpdateP90 = time.Duration(p.updateHist.ValueAtQuantile(90)) * time.Microsecond
+		stats.UpdateP95 = time.Duration(p.updateHist.ValueAtQuantile(95)) * time.Microsecond
+		stats.UpdateP99 = time.Duration(p.updateHist.ValueAtQuantile(99)) * time.Microsecond
 
 		currentUpdateSnapshot = percentileSnapshot{
-			p50: int64(t.updateHist.Mean()),
-			p90: t.updateHist.ValueAtQuantile(90),
-			p95: t.updateHist.ValueAtQuantile(95),
-			p99: t.updateHist.ValueAtQuantile(99),
+			p50: int64(p.updateHist.Mean()),
+			p90: p.updateHist.ValueAtQuantile(90),
+			p95: p.updateHist.ValueAtQuantile(95),
+			p99: p.updateHist.ValueAtQuantile(99),
 		}
 	}
 
-	if t.drawHist.TotalCount() > 0 {
-		stats.DrawP50 = time.Duration(t.drawHist.Mean()) * time.Microsecond
-		stats.DrawP90 = time.Duration(t.drawHist.ValueAtQuantile(90)) * time.Microsecond
-		stats.DrawP95 = time.Duration(t.drawHist.ValueAtQuantile(95)) * time.Microsecond
-		stats.DrawP99 = time.Duration(t.drawHist.ValueAtQuantile(99)) * time.Microsecond
+	if p.drawHist.TotalCount() > 0 {
+		stats.DrawP50 = time.Duration(p.drawHist.Mean()) * time.Microsecond
+		stats.DrawP90 = time.Duration(p.drawHist.ValueAtQuantile(90)) * time.Microsecond
+		stats.DrawP95 = time.Duration(p.drawHist.ValueAtQuantile(95)) * time.Microsecond
+		stats.DrawP99 = time.Duration(p.drawHist.ValueAtQuantile(99)) * time.Microsecond
 
 		currentDrawSnapshot = percentileSnapshot{
-			p50: int64(t.drawHist.Mean()),
-			p90: t.drawHist.ValueAtQuantile(90),
-			p95: t.drawHist.ValueAtQuantile(95),
-			p99: t.drawHist.ValueAtQuantile(99),
+			p50: int64(p.drawHist.Mean()),
+			p90: p.drawHist.ValueAtQuantile(90),
+			p95: p.drawHist.ValueAtQuantile(95),
+			p99: p.drawHist.ValueAtQuantile(99),
 		}
 	}
 
-	if len(t.tpsSamples) > 0 {
-		stats.TPSAvg = avgFloat(t.tpsSamples)
+	if len(p.tpsSamples) > 0 {
+		stats.TPSAvg = avgFloat(p.tpsSamples)
 	}
 
-	if len(t.fpsSamples) > 0 {
-		stats.FPSAvg = avgFloat(t.fpsSamples)
+	if len(p.fpsSamples) > 0 {
+		stats.FPSAvg = avgFloat(p.fpsSamples)
 	}
 
 	// Detect rapid growth in percentiles (compare against baseline from 1 second ago)
-	stats.UpdateWarning = t.detectGrowth(t.updateBaselineP, currentUpdateSnapshot)
-	stats.DrawWarning = t.detectGrowth(t.drawBaselineP, currentDrawSnapshot)
+	stats.UpdateWarning = p.detectGrowth(p.updateBaselineP, currentUpdateSnapshot)
+	stats.DrawWarning = p.detectGrowth(p.drawBaselineP, currentDrawSnapshot)
 
 	// Update baseline snapshot every percentileHistorySize ticks (1 second)
-	t.ticksSinceLastUpdate++
-	if t.ticksSinceLastUpdate >= percentileHistorySize {
-		t.updateBaselineP = currentUpdateSnapshot
-		t.drawBaselineP = currentDrawSnapshot
-		t.ticksSinceLastUpdate = 0
+	p.ticksSinceLastUpdate++
+	if p.ticksSinceLastUpdate >= percentileHistorySize {
+		p.updateBaselineP = currentUpdateSnapshot
+		p.drawBaselineP = currentDrawSnapshot
+		p.ticksSinceLastUpdate = 0
 	}
 
 	return stats
@@ -166,7 +166,7 @@ func (s PerfStats) AsString() []string {
 	}
 }
 
-func (t *PerfTracker) detectGrowth(baseline, current percentileSnapshot) bool {
+func (p *PerfTracker) detectGrowth(baseline, current percentileSnapshot) bool {
 	// Need a valid baseline (all zeros means we haven't collected 1 second of data yet)
 	if baseline.p50 == 0 && baseline.p90 == 0 && baseline.p95 == 0 && baseline.p99 == 0 {
 		return false

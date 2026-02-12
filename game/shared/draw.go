@@ -174,7 +174,6 @@ func drawItems(p *State, screen *ebiten.Image) {
 			false,
 		)
 	}
-
 }
 
 func drawScores(p *State, screen *ebiten.Image) {

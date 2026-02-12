@@ -9,7 +9,6 @@ import (
 	. "snakehem/game/shared/snake"
 	"snakehem/input"
 	"snakehem/model"
-	"snakehem/util"
 	"strings"
 	"time"
 
@@ -19,23 +18,14 @@ import (
 )
 
 func (g *Game) Update() error {
-	if g.perfTracker != nil {
-		start := time.Now()
-		defer func() {
-			g.perfTracker.RecordUpdate(time.Since(start))
-			g.perfTracker.RecordTPS(ebiten.ActualTPS())
-		}()
-	}
+	start := time.Now()
+	defer func() {
+		g.localState.RecordUpdateTimeAndTps(time.Since(start), ebiten.ActualFPS())
+	}()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		log.Info().Msg("Exiting game")
 		os.Exit(0)
-	} else if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
-		g.perfTrackerVisible = !g.perfTrackerVisible
-		log.Debug().Bool("enabled", g.perfTrackerVisible).Msg("Performance tracker")
-		if g.perfTrackerVisible {
-			g.perfTracker = util.NewPerfTracker()
-		}
 	}
 	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
 	switch g.sharedState.Stage {

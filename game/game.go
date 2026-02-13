@@ -5,6 +5,7 @@ import (
 	"snakehem/game/common"
 	"snakehem/game/local"
 	"snakehem/game/shared"
+	"snakehem/game/unshaded"
 	"snakehem/input/controller"
 	"snakehem/model"
 
@@ -16,10 +17,10 @@ import (
 type Game struct {
 	sharedState       *shared.State
 	localState        *local.State
+	unshadedState     *unshaded.State
 	controllers       []controller.Controller
 	activeControllers []controller.Controller
 	shader            *ebiten.Shader
-	lastFrame         *ebiten.Image
 }
 
 func Run() {
@@ -30,13 +31,14 @@ func Run() {
 	ebiten.SetTPS(model.Tps)
 	ebiten.SetWindowTitle("snakehem")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	ebiten.SetScreenClearedEveryFrame(false)
 	g := &Game{
 		sharedState:       shared.NewSharedState(),
 		localState:        local.NewLocalState(),
+		unshadedState:     unshaded.NewUnshadedState(),
 		controllers:       nil,
 		activeControllers: nil,
 		shader:            shader.NewShader(),
-		lastFrame:         ebiten.NewImage(common.GridDimPx, common.GridDimPx),
 	}
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal().Err(err).Send()

@@ -20,7 +20,7 @@ import (
 func (g *Game) Update() error {
 	start := time.Now()
 	defer func() {
-		g.localState.RecordUpdateTimeAndTps(time.Since(start), ebiten.ActualFPS())
+		g.unshadedState.RecordUpdateTimeAndTps(start)
 	}()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
@@ -28,6 +28,7 @@ func (g *Game) Update() error {
 		os.Exit(0)
 	}
 	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
+	g.unshadedState.Update()
 	switch g.sharedState.Stage {
 	case shared.Lobby:
 		g.updateHeadCount()

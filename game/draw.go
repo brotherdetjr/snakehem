@@ -1,6 +1,7 @@
 package game
 
 import (
+	"snakehem/game/common"
 	"snakehem/model"
 	"time"
 
@@ -8,18 +9,22 @@ import (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	if ebiten.Tick()%model.TpsMultiplier == 0 {
+		g.doDraw(screen)
+	}
+}
+
+func (g *Game) doDraw(screen *ebiten.Image) {
 	start := time.Now()
 	defer func() {
-		g.localState.RecordDrawTimeAndFps(time.Since(start), ebiten.ActualFPS())
+		g.unshadedState.RecordDrawTimeAndFps(start)
 	}()
-
-	if ebiten.Tick()%model.TpsMultiplier == 0 {
-		g.lastFrame.Clear()
-		g.sharedState.Draw(g.lastFrame)
-		g.localState.Draw(g.lastFrame)
-		g.applyShader(g.lastFrame)
-	}
-	screen.DrawImage(g.lastFrame, nil)
+	frame := ebiten.NewImage(common.GridDimPx, common.GridDimPx)
+	g.sharedState.Draw(frame)
+	g.localState.Draw(frame)
+	g.applyShader(frame)
+	g.unshadedState.Draw(frame)
+	screen.DrawImage(frame, nil)
 }
 
 func (g *Game) applyShader(screen *ebiten.Image) {

@@ -2,24 +2,20 @@ package local
 
 import (
 	"image/color"
-	"snakehem/game/local/perftracker"
 	"snakehem/game/local/textinput"
 	"snakehem/input/controller"
 	"snakehem/model"
-	"time"
 )
 
 type State struct {
-	stage       Stage
-	textInput   *textinput.TextInput
-	perfTracker *perftracker.PerfTracker
+	stage     Stage
+	textInput *textinput.TextInput
 }
 
 func NewLocalState() *State {
 	return &State{
-		stage:       Off,
-		textInput:   nil,
-		perfTracker: nil,
+		stage:     Off,
+		textInput: nil,
 	}
 }
 
@@ -35,6 +31,9 @@ const (
 )
 
 func (s *State) SwitchToPlayerNameStage(c controller.Controller, playerName string, colour color.Color, cb func(string)) {
+	if s.textInput != nil {
+		return
+	}
 	s.stage = PlayerName
 	s.textInput = textinput.
 		NewTextInput(c).
@@ -50,18 +49,4 @@ func (s *State) SwitchToPlayerNameStage(c controller.Controller, playerName stri
 			s.stage = Off
 			s.textInput = nil
 		})
-}
-
-func (s *State) RecordUpdateTimeAndTps(duration time.Duration, tps float64) {
-	if s.perfTracker != nil {
-		s.perfTracker.RecordUpdate(duration)
-		s.perfTracker.RecordTPS(tps)
-	}
-}
-
-func (s *State) RecordDrawTimeAndFps(duration time.Duration, fps float64) {
-	if s.perfTracker != nil {
-		s.perfTracker.RecordDraw(duration)
-		s.perfTracker.RecordFPS(fps)
-	}
 }

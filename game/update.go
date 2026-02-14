@@ -20,40 +20,40 @@ import (
 func (g *Game) Update() error {
 	start := time.Now()
 	defer func() {
-		g.unshadedState.RecordUpdateTimeAndTps(start)
+		g.unshadedContent.RecordUpdateTimeAndTps(start)
 	}()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		log.Info().Msg("Exiting game")
 		os.Exit(0)
 	}
-	g.localState.Update(&common.Context{Tick: ebiten.Tick()})
-	g.unshadedState.Update()
-	switch g.sharedState.Stage {
+	g.localContent.Update(&common.Context{Tick: ebiten.Tick()})
+	g.unshadedContent.Update()
+	switch g.sharedContent.Stage {
 	case shared.Lobby:
 		g.updateHeadCount()
 	case shared.Action:
-		if g.sharedState.GetCountdownSeconds() >= 0 {
-			g.sharedState.Countdown--
+		if g.sharedContent.GetCountdownSeconds() >= 0 {
+			g.sharedContent.Countdown--
 		}
-		if g.sharedState.FadeCountdown > 0 {
-			g.sharedState.FadeCountdown--
-			if g.sharedState.FadeCountdown == 0 {
-				g.sharedState.SwitchToScoreboardStage()
+		if g.sharedContent.FadeCountdown > 0 {
+			g.sharedContent.FadeCountdown--
+			if g.sharedContent.FadeCountdown == 0 {
+				g.sharedContent.SwitchToScoreboardStage()
 				break
 			}
 		}
-		for _, snake := range g.sharedState.Snakes {
+		for _, snake := range g.sharedContent.Snakes {
 			head := snake.Links[0]
-			if g.sharedState.GetCountdownSeconds() <= 0 {
+			if g.sharedContent.GetCountdownSeconds() <= 0 {
 				var snakeHeadsRednessGrowth float32
-				if (g.sharedState.ActionFrameCount/model.Tps)%2 == 0 {
+				if (g.sharedContent.ActionFrameCount/model.Tps)%2 == 0 {
 					snakeHeadsRednessGrowth = -1
 				} else {
 					snakeHeadsRednessGrowth = 1
 				}
 				head.ChangeRedness(0.2 * snakeHeadsRednessGrowth)
-			} else if g.activeControllers[snake.Id].IsAnyJustPressed() && g.sharedState.FadeCountdown == 0 {
+			} else if g.activeControllers[snake.Id].IsAnyJustPressed() && g.sharedContent.FadeCountdown == 0 {
 				head.Redness = 1
 			} else {
 				head.ChangeRedness(-0.1)
@@ -64,13 +64,13 @@ func (g *Game) Update() error {
 				}
 			}
 		}
-		if g.sharedState.GetCountdownSeconds() > 0 {
+		if g.sharedContent.GetCountdownSeconds() > 0 {
 			break
 		}
-		for _, snake := range g.sharedState.Snakes {
+		for _, snake := range g.sharedContent.Snakes {
 			direction := snake.Direction
 			controller := g.activeControllers[snake.Id]
-			if g.sharedState.FadeCountdown == 0 {
+			if g.sharedContent.FadeCountdown == 0 {
 				if controller.IsUpJustPressed() {
 					direction = Up
 					log.Debug().Int("snakeId", snake.Id).Str("direction", "Up").Msg("New direction")
@@ -91,8 +91,8 @@ func (g *Game) Update() error {
 				direction = snake.Direction
 				nX, nY = newHeadCoords(snake, direction)
 			}
-			if g.sharedState.ActionFrameCount%model.TpsMultiplier == 0 {
-				if g.sharedState.Grid[nY][nX] == nil {
+			if g.sharedContent.ActionFrameCount%model.TpsMultiplier == 0 {
+				if g.sharedContent.Grid[nY][nX] == nil {
 					tail := snake.Links[len(snake.Links)-1]
 					oldTailX := tail.X
 					oldTailY := tail.Y
@@ -113,18 +113,18 @@ func (g *Game) Update() error {
 							Redness:       0,
 						})
 					} else {
-						g.sharedState.Grid[oldTailY][oldTailX] = nil
+						g.sharedContent.Grid[oldTailY][oldTailX] = nil
 					}
 					for _, link := range snake.Links {
-						g.sharedState.Grid[link.Y][link.X] = link
+						g.sharedContent.Grid[link.Y][link.X] = link
 					}
-					if g.sharedState.IsAppleHere(nX, nY) {
-						g.sharedState.EatApple(snake)
+					if g.sharedContent.IsAppleHere(nX, nY) {
+						g.sharedContent.EatApple(snake)
 					}
-				} else if g.sharedState.FadeCountdown == 0 {
-					switch item := g.sharedState.Grid[nY][nX].(type) {
+				} else if g.sharedContent.FadeCountdown == 0 {
+					switch item := g.sharedContent.Grid[nY][nX].(type) {
 					case *Link:
-						idx := slices.Index(g.sharedState.Snakes[item.SnakeId].Links, item)
+						idx := slices.Index(g.sharedContent.Snakes[item.SnakeId].Links, item)
 						if idx > 0 {
 							g.biteSnake(item, snake, idx)
 						}
@@ -133,8 +133,8 @@ func (g *Game) Update() error {
 			}
 			snake.Direction = direction
 		}
-		g.sharedState.TryToPutNewApple()
-		g.sharedState.ActionFrameCount++
+		g.sharedContent.TryToPutNewApple()
+		g.sharedContent.ActionFrameCount++
 	case shared.Scoreboard:
 		g.updateScoreboard()
 	}
@@ -142,12 +142,12 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
-	targetSnake := g.sharedState.Snakes[bittenLink.SnakeId]
+	targetSnake := g.sharedContent.Snakes[bittenLink.SnakeId]
 	bittenLink.HealthPercent -= model.HealthReductionPerBite
 	bittenLink.Redness = 1
 	g.activeControllers[targetSnake.Id].Vibrate(200 * time.Millisecond)
 	if targetSnake != bitingSnake {
-		g.sharedState.IncScore(bitingSnake, model.BitLinkScore)
+		g.sharedContent.IncScore(bitingSnake, model.BitLinkScore)
 	}
 	if bittenLink.HealthPercent <= 0 {
 		if targetSnake != bitingSnake {
@@ -157,46 +157,46 @@ func (g *Game) biteSnake(bittenLink *Link, bitingSnake *Snake, idx int) {
 				Int("targetSnakeId", targetSnake.Id).
 				Int("nippedTailLength", nippedTailLength).
 				Msg("Nip!")
-			g.sharedState.IncScore(bitingSnake, nippedTailLength*model.NippedTailLinkBonusMultiplier)
+			g.sharedContent.IncScore(bitingSnake, nippedTailLength*model.NippedTailLinkBonusMultiplier)
 		}
 		for i := idx; i < len(targetSnake.Links); i++ {
 			link := targetSnake.Links[i]
-			g.sharedState.Grid[link.Y][link.X] = nil
+			g.sharedContent.Grid[link.Y][link.X] = nil
 		}
 		targetSnake.Links = targetSnake.Links[:idx]
 	}
 }
 
 func (g *Game) updateHeadCount() {
-	for _, snake := range g.sharedState.Snakes {
+	for _, snake := range g.sharedContent.Snakes {
 		snake.Links[0].ChangeRedness(-0.1)
 	}
 	g.controllers = input.Controllers()
 	for _, c := range g.controllers {
 		if c.IsAnyJustPressed() {
-			snakes := g.sharedState.Snakes
+			snakes := g.sharedContent.Snakes
 			snakeCount := len(snakes)
 			snakeIdx := slices.IndexFunc(snakes, func(snake *Snake) bool { return g.activeControllers[snake.Id].Equals(c) })
 			if snakeIdx == -1 {
-				if snakeCount < model.MaxSnakes && g.localState.GetStage() == local.Off {
+				if snakeCount < model.MaxSnakes && g.localContent.GetStage() == local.Off {
 					// Start name entry for new player
-					g.localState.SwitchToPlayerNameStage(
+					g.localContent.SwitchToPlayerNameStage(
 						c,
 						"Player "+string(rune('0'+(snakeCount+1))),
 						common.SnakeColours[snakeCount],
 						func(s string) {
 							// Submit name and join game
 							playerName := strings.TrimSpace(s)
-							snakes := g.sharedState.Snakes
+							snakes := g.sharedContent.Snakes
 							snakeCount := len(snakes)
 							for _, snake := range snakes {
 								head := snake.Links[0]
-								g.sharedState.Grid[head.Y][head.X] = nil
+								g.sharedContent.Grid[head.Y][head.X] = nil
 							}
 							newSnake := NewSnake(snakeCount, playerName, common.SnakeColours[snakeCount])
-							g.sharedState.Snakes = append(g.sharedState.Snakes, newSnake)
+							g.sharedContent.Snakes = append(g.sharedContent.Snakes, newSnake)
 							g.activeControllers = append(g.activeControllers, c)
-							g.sharedState.LayoutSnakes()
+							g.sharedContent.LayoutSnakes()
 							log.Info().Str("name", playerName).Int("id", snakeCount).Msg("Player joined")
 						},
 					)
@@ -204,7 +204,7 @@ func (g *Game) updateHeadCount() {
 			} else {
 				snakes[snakeIdx].Links[0].Redness = 1
 				if c.IsStartJustPressed() && snakeCount > 1 {
-					g.sharedState.Stage = shared.Action
+					g.sharedContent.Stage = shared.Action
 					log.Info().Int("tagetScore", model.TargetScore).Msg("Action started!")
 				}
 			}
@@ -213,10 +213,10 @@ func (g *Game) updateHeadCount() {
 }
 
 func (g *Game) updateScoreboard() {
-	for _, snake := range g.sharedState.Snakes {
+	for _, snake := range g.sharedContent.Snakes {
 		controller := g.activeControllers[snake.Id]
 		if controller.IsStartJustPressed() {
-			g.sharedState.SwitchToLobbyStage()
+			g.sharedContent.SwitchToLobbyStage()
 		} else if controller.IsExitJustPressed() {
 			os.Exit(0)
 		}

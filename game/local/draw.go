@@ -4,8 +4,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func (s *State) Draw(screen *ebiten.Image) {
-	if s.textInput != nil {
-		s.textInput.Draw(screen)
+func (c *Content) Draw(screen *ebiten.Image) {
+	if c.textInput != nil {
+		c.textInput.Draw(screen)
 	}
 }

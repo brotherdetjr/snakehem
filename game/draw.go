@@ -17,13 +17,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) doDraw(screen *ebiten.Image) {
 	start := time.Now()
 	defer func() {
-		g.unshadedState.RecordDrawTimeAndFps(start)
+		g.unshadedContent.RecordDrawTimeAndFps(start)
 	}()
 	frame := ebiten.NewImage(common.GridDimPx, common.GridDimPx)
-	g.sharedState.Draw(frame)
-	g.localState.Draw(frame)
+	g.sharedContent.Draw(frame)
+	g.localContent.Draw(frame)
 	g.applyShader(frame)
-	g.unshadedState.Draw(frame)
+	g.unshadedContent.Draw(frame)
 	screen.DrawImage(frame, nil)
 }
 

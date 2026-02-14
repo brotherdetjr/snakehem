@@ -7,20 +7,20 @@ import (
 	"snakehem/model"
 )
 
-type State struct {
+type Content struct {
 	stage     Stage
 	textInput *textinput.TextInput
 }
 
-func NewLocalState() *State {
-	return &State{
+func NewContent() *Content {
+	return &Content{
 		stage:     Off,
 		textInput: nil,
 	}
 }
 
-func (s *State) GetStage() Stage {
-	return s.stage
+func (c *Content) GetStage() Stage {
+	return c.stage
 }
 
 type Stage uint8
@@ -30,13 +30,13 @@ const (
 	PlayerName
 )
 
-func (s *State) SwitchToPlayerNameStage(c controller.Controller, playerName string, colour color.Color, cb func(string)) {
-	if s.textInput != nil {
+func (c *Content) SwitchToPlayerNameStage(ctrl controller.Controller, playerName string, colour color.Color, cb func(string)) {
+	if c.textInput != nil {
 		return
 	}
-	s.stage = PlayerName
-	s.textInput = textinput.
-		NewTextInput(c).
+	c.stage = PlayerName
+	c.textInput = textinput.
+		NewTextInput(ctrl).
 		WithLabel("ENTER YOUR NAME").
 		WithValue(playerName).
 		WithMaxLength(model.MaxNameLength).
@@ -46,7 +46,7 @@ func (s *State) SwitchToPlayerNameStage(c controller.Controller, playerName stri
 		ValidateNotEmpty("name cannot be empty").
 		WithCallback(func(name string) {
 			cb(name)
-			s.stage = Off
-			s.textInput = nil
+			c.stage = Off
+			c.textInput = nil
 		})
 }

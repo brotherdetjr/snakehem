@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type State struct {
+type Content struct {
 	Stage            Stage
 	Grid             [model.GridSize][model.GridSize]any
 	Snakes           []*snake.Snake
@@ -24,8 +24,8 @@ type State struct {
 	applePos         *util.Coords
 }
 
-func NewSharedState() *State {
-	return &State{
+func NewContent() *Content {
+	return &Content{
 		Stage:            Lobby,
 		Grid:             [model.GridSize][model.GridSize]any{},
 		Countdown:        model.Tps * model.CountdownSeconds,
@@ -44,95 +44,95 @@ const (
 	Scoreboard
 )
 
-func (s *State) SwitchToScoreboardStage() {
-	s.Stage = Scoreboard
-	entries := make([]scoreboard.Entry, len(s.Snakes))
-	for i, sn := range s.Snakes {
-		score := sn.Score
+func (c *Content) SwitchToScoreboardStage() {
+	c.Stage = Scoreboard
+	entries := make([]scoreboard.Entry, len(c.Snakes))
+	for i, s := range c.Snakes {
+		score := s.Score
 		if score > model.TargetScore {
 			score = model.TargetScore
 		}
 		entries[i] = scoreboard.Entry{
-			Name:  sn.Name,
+			Name:  s.Name,
 			Score: score,
 			ColourFunc: func() color.Color {
-				return common.WithRedness(sn.Colour, sn.Links[0].Redness)
+				return common.WithRedness(s.Colour, s.Links[0].Redness)
 			},
 		}
 	}
-	s.scoreboard = scoreboard.NewScoreboard(entries)
+	c.scoreboard = scoreboard.NewScoreboard(entries)
 }
 
-func (s *State) SwitchToLobbyStage() {
-	s.Stage = Lobby
-	s.Grid = [model.GridSize][model.GridSize]any{}
-	for _, sn := range s.Snakes {
-		sn.Score = 0
-		sn.Links = sn.Links[0:1]
+func (c *Content) SwitchToLobbyStage() {
+	c.Stage = Lobby
+	c.Grid = [model.GridSize][model.GridSize]any{}
+	for _, s := range c.Snakes {
+		s.Score = 0
+		s.Links = s.Links[0:1]
 	}
-	s.Countdown = model.Tps * model.CountdownSeconds
-	s.FadeCountdown = 0
-	s.ActionFrameCount = 0
-	s.scoreboard = nil
-	s.applePos = nil
-	s.LayoutSnakes()
+	c.Countdown = model.Tps * model.CountdownSeconds
+	c.FadeCountdown = 0
+	c.ActionFrameCount = 0
+	c.scoreboard = nil
+	c.applePos = nil
+	c.LayoutSnakes()
 	log.Info().Msg("Game restarted")
 }
 
-func (s *State) LayoutSnakes() {
-	delta := 2 * math.Pi / float64(len(s.Snakes))
+func (c *Content) LayoutSnakes() {
+	delta := 2 * math.Pi / float64(len(c.Snakes))
 	alpha := float64(0)
-	for _, sn := range s.Snakes {
+	for _, s := range c.Snakes {
 		y := model.GridSize/2 - int(math.Cos(alpha)*model.GridSize/3)
 		x := model.GridSize/2 + int(math.Sin(alpha)*model.GridSize/3)
-		head := sn.Links[0]
+		head := s.Links[0]
 		head.X = x
 		head.Y = y
-		s.Grid[y][x] = head
+		c.Grid[y][x] = head
 		alpha += delta
-		sn.PickInitialDirection()
+		s.PickInitialDirection()
 	}
 }
 
-func (s *State) TryToPutNewApple() {
-	if s.applePos == nil && rand.IntN(model.NewAppleProbabilityParam) == 0 {
-		x, y := s.randomUnoccupiedCell()
+func (c *Content) TryToPutNewApple() {
+	if c.applePos == nil && rand.IntN(model.NewAppleProbabilityParam) == 0 {
+		x, y := c.randomUnoccupiedCell()
 		if x != -1 && y != -1 {
-			s.applePos = &util.Coords{X: x, Y: y}
+			c.applePos = &util.Coords{X: x, Y: y}
 			log.Debug().Int("x", x).Int("y", y).Msg("Put a new apple")
 		}
 	}
 }
 
-func (s *State) IncScore(snake *snake.Snake, delta int) {
+func (c *Content) IncScore(snake *snake.Snake, delta int) {
 	snake.Score += delta
 	log.Debug().Int("snakeId", snake.Id).Int("score", snake.Score).Msg("New score")
 	if snake.Score >= model.TargetScore {
 		log.Info().Msg("Stopping the action!")
-		s.FadeCountdown = model.GridFadeCountdown
+		c.FadeCountdown = model.GridFadeCountdown
 	}
 }
 
-func (s *State) IsAppleHere(x, y int) bool {
-	return s.applePos != nil && *s.applePos == util.Coords{X: x, Y: y}
+func (c *Content) IsAppleHere(x, y int) bool {
+	return c.applePos != nil && *c.applePos == util.Coords{X: x, Y: y}
 }
 
-func (s *State) EatApple(snake *snake.Snake) {
-	s.applePos = nil
-	s.IncScore(snake, model.AppleScore)
+func (c *Content) EatApple(snake *snake.Snake) {
+	c.applePos = nil
+	c.IncScore(snake, model.AppleScore)
 	log.Debug().Int("snakeId", snake.Id).Msg("Apple eaten!")
 }
 
-func (s *State) GetCountdownSeconds() int {
-	return (s.Countdown - 1) / model.Tps
+func (c *Content) GetCountdownSeconds() int {
+	return (c.Countdown - 1) / model.Tps
 }
 
-func (s *State) randomUnoccupiedCell() (int, int) {
+func (c *Content) randomUnoccupiedCell() (int, int) {
 	x := rand.IntN(model.GridSize)
 	y := rand.IntN(model.GridSize)
 	for ; y < model.GridSize; y++ {
 		for ; x < model.GridSize; x++ {
-			if s.Grid[y][x] == nil {
+			if c.Grid[y][x] == nil {
 				return x, y
 			}
 		}

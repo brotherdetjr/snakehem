@@ -8,13 +8,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (s *State) Update() {
+func (c *Content) Update() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
-		if s.perfTracker == nil {
-			s.perfTracker = perftracker.NewPerfTracker()
+		if c.perfTracker == nil {
+			c.perfTracker = perftracker.NewPerfTracker()
 		} else {
-			s.perfTracker = nil
+			c.perfTracker = nil
 		}
-		log.Info().Bool("enabled", s.perfTracker != nil).Msg("Performance tracker")
+		log.Info().Bool("enabled", c.perfTracker != nil).Msg("Performance tracker")
 	}
 }

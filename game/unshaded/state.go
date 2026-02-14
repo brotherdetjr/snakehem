@@ -7,26 +7,26 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type State struct {
+type Content struct {
 	perfTracker *perftracker.PerfTracker
 }
 
-func NewUnshadedState() *State {
-	return &State{perfTracker: nil}
+func NewContent() *Content {
+	return &Content{perfTracker: nil}
 }
 
 type Stage uint8
 
-func (s *State) RecordUpdateTimeAndTps(since time.Time) {
-	if s.perfTracker != nil {
-		s.perfTracker.RecordUpdate(time.Since(since))
-		s.perfTracker.RecordTPS(ebiten.ActualTPS())
+func (c *Content) RecordUpdateTimeAndTps(since time.Time) {
+	if c.perfTracker != nil {
+		c.perfTracker.RecordUpdate(time.Since(since))
+		c.perfTracker.RecordTPS(ebiten.ActualTPS())
 	}
 }
 
-func (s *State) RecordDrawTimeAndFps(since time.Time) {
-	if s.perfTracker != nil {
-		s.perfTracker.RecordDraw(time.Since(since))
-		s.perfTracker.RecordFPS(ebiten.ActualFPS())
+func (c *Content) RecordDrawTimeAndFps(since time.Time) {
+	if c.perfTracker != nil {
+		c.perfTracker.RecordDraw(time.Since(since))
+		c.perfTracker.RecordFPS(ebiten.ActualFPS())
 	}
 }

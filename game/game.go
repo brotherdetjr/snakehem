@@ -15,9 +15,9 @@ import (
 )
 
 type Game struct {
-	sharedState       *shared.State
-	localState        *local.State
-	unshadedState     *unshaded.State
+	sharedContent     *shared.Content
+	localContent      *local.Content
+	unshadedContent   *unshaded.Content
 	controllers       []controller.Controller
 	activeControllers []controller.Controller
 	shader            *ebiten.Shader
@@ -33,9 +33,9 @@ func Run() {
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	ebiten.SetScreenClearedEveryFrame(false)
 	g := &Game{
-		sharedState:       shared.NewSharedState(),
-		localState:        local.NewLocalState(),
-		unshadedState:     unshaded.NewUnshadedState(),
+		sharedContent:     shared.NewContent(),
+		localContent:      local.NewContent(),
+		unshadedContent:   unshaded.NewContent(),
 		controllers:       nil,
 		activeControllers: nil,
 		shader:            shader.NewShader(),

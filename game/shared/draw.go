@@ -21,13 +21,13 @@ const (
 	EyeGapPx       = 3
 )
 
-func (s *State) Draw(screen *ebiten.Image) {
+func (c *Content) Draw(screen *ebiten.Image) {
 	screen.Fill(colornames.Darkolivegreen)
-	drawItems(s, screen)
-	switch s.Stage {
+	drawItems(c, screen)
+	switch c.Stage {
 	case Lobby:
-		drawScores(s, screen)
-		snakeCount := len(s.Snakes)
+		drawScores(c, screen)
+		snakeCount := len(c.Snakes)
 		if snakeCount < 2 {
 			common.DrawTextCentered(
 				screen,
@@ -62,7 +62,7 @@ func (s *State) Draw(screen *ebiten.Image) {
 			}
 		}
 	case Action:
-		if s.FadeCountdown > 0 {
+		if c.FadeCountdown > 0 {
 			vector.FillRect(
 				screen,
 				0,
@@ -73,21 +73,21 @@ func (s *State) Draw(screen *ebiten.Image) {
 					R: 85,
 					G: 107,
 					B: 47,
-					A: uint8((model.GridFadeCountdown - s.FadeCountdown) * 200 / model.GridFadeCountdown),
+					A: uint8((model.GridFadeCountdown - c.FadeCountdown) * 200 / model.GridFadeCountdown),
 				},
 				false,
 			)
 		}
-		drawScores(s, screen)
-		drawCountdown(s, screen)
-		drawTimeElapsed(s, screen)
+		drawScores(c, screen)
+		drawCountdown(c, screen)
+		drawTimeElapsed(c, screen)
 	case Scoreboard:
-		s.scoreboard.Draw(screen)
-		drawTimeElapsed(s, screen)
+		c.scoreboard.Draw(screen)
+		drawTimeElapsed(c, screen)
 	}
 }
 
-func drawItems(p *State, screen *ebiten.Image) {
+func drawItems(p *Content, screen *ebiten.Image) {
 	for i := 0; i < model.GridSize; i++ {
 		for j := 0; j < model.GridSize; j++ {
 			if val := p.Grid[i][j]; val != nil {
@@ -176,7 +176,7 @@ func drawItems(p *State, screen *ebiten.Image) {
 	}
 }
 
-func drawScores(p *State, screen *ebiten.Image) {
+func drawScores(p *Content, screen *ebiten.Image) {
 	snakes := p.Snakes
 	scoresAtTop := len(snakes)
 	if scoresAtTop > MaxScoresAtTop {
@@ -187,7 +187,7 @@ func drawScores(p *State, screen *ebiten.Image) {
 	drawScoreRow(p, screen, snakes[scoresAtTop:], common.GridDimPx-common.Pxterm24Height-common.Pxterm16Height*2)
 }
 
-func drawScoreRow(p *State, screen *ebiten.Image, snakes []*snake.Snake, rowTopPos int) {
+func drawScoreRow(p *Content, screen *ebiten.Image, snakes []*snake.Snake, rowTopPos int) {
 	span := float64(screen.Bounds().Dx()) / float64(len(snakes))
 	for i, s := range snakes {
 		if p.Stage != Action || s.Score+model.ApproachingTargetScoreGap < model.TargetScore || (p.ActionFrameCount/(model.Tps/4))%2 > 0 {
@@ -198,7 +198,7 @@ func drawScoreRow(p *State, screen *ebiten.Image, snakes []*snake.Snake, rowTopP
 	}
 }
 
-func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.Color) {
+func scoreStrAndColourForIthSnake(p *Content, snake *snake.Snake) (string, color.Color) {
 	score := snake.Score
 	if score > model.TargetScore {
 		score = model.TargetScore
@@ -213,7 +213,7 @@ func scoreStrAndColourForIthSnake(p *State, snake *snake.Snake) (string, color.C
 	return txt, colour
 }
 
-func drawTimeElapsed(p *State, screen *ebiten.Image) {
+func drawTimeElapsed(p *Content, screen *ebiten.Image) {
 	t := time.UnixMilli(int64(float32(p.ActionFrameCount) / model.Tps * 1000))
 	common.DrawTextCentered(
 		screen,
@@ -224,7 +224,7 @@ func drawTimeElapsed(p *State, screen *ebiten.Image) {
 	)
 }
 
-func drawCountdown(p *State, screen *ebiten.Image) {
+func drawCountdown(p *Content, screen *ebiten.Image) {
 	countdown := p.GetCountdownSeconds()
 	if countdown < 0 {
 		return
